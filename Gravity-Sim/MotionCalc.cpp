@@ -1,5 +1,3 @@
-/*YO GMan read This. Building this solution and running it should give you like a yellow screen thingy. That's about it. This makes sure that everything is fine and working on your end*/
-
 
 #include<GL/glew.h>
 #include<glut/glut.h>
@@ -9,8 +7,6 @@
 #include<sstream>
 
 void* Currentfont; //saves the font as a void pointer
-//void KeyProc(unsigned char key, int x, int y);
-
 
 
 void SetFont(void* font)
@@ -28,7 +24,7 @@ void DrawString(float x, float y, float z, const char* string)
 		glColor3f(0.0, 1.0, 1.0);
 		glutBitmapCharacter(Currentfont, *c);
 	}
-}
+}//This function draws our string in the position we ask it too. This way it's abstracted and cleaner if we have to display multiple strings
 
 
 
