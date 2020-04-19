@@ -1,3 +1,6 @@
+/*YO GMan read This. Building this solution and running it should give you like a yellow screen thingy. That's about it. This makes sure that everything is fine and working on your end*/
+
+
 #include<GL/glew.h>
 #include<glut/glut.h>
 #include<gl/GLU.h>//this is apparantly built in. Even glew was built in. We techically only needed to set the preprocessor thingy for it. GL is our include and gl is the built-in shit from Visual Studio.
@@ -5,6 +8,7 @@
 void disp()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
+	glClearColor(1.0, 1.0, 0.0, 1.0);//change the background
 	glFlush();
 }
 
