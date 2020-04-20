@@ -80,7 +80,15 @@ void KeyProc(unsigned char key, int x, int y)//This is function bound to the key
 		else if(key == 8)
 		{
 			int len = inp[(int)DispStat].length();
+			if (len - 1 <= 0)
+			{
+				values[(int)DispStat] = 0;
+				glutPostRedisplay();
+				return;
+			}//if they enter backspace and there's nothing to clear.
+			std::cout << len << std::endl;
 			inp[(int)DispStat] = inp[(int)DispStat].substr(0, (len - 1));//extract everything but the last charcter here.
+			std::cout << inp[(int)DispStat]<<std::endl;
 			values[(int)DispStat] = std::stof(inp[(int)DispStat]);//save the value so we can do stuff with it. I'll try and flush it into a buffer later on but there's no noticable performance impact as of now.
 			glutPostRedisplay();
 		}
