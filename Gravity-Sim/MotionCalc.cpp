@@ -4,7 +4,7 @@
 #include<gl/GLU.h>//this is apparantly built in. Even glew was built in. We techically only needed to set the preprocessor thingy for it. GL is our include and gl is the built-in shit from Visual Studio.
 #include<iostream>
 #include<string>
-#include<sstream>
+//#include<sstream>
 
 void* Currentfont; //saves the font as a void pointer
 
@@ -30,10 +30,12 @@ void DrawString(float x, float y, float z, const char* string)
 
 enum class AppStat
 {
-	UNKNOWN = -1, START_SCREEN = 0, MENU = 1, PRJMTN_INP_FIRSTVAR = 2, PRJMTN_INP_SECONDVAR = 3, 
-	PRJMTN_DISP = 4, DROP_INP_HT = 5, DROP_DISP = 6, ABOUT_PAGE = 7
+	UNKNOWN = -1, START_SCREEN = 3, MENU = 4, PRJMTN_INP_FIRSTVAR = 0, PRJMTN_INP_SECONDVAR = 1, 
+	PRJMTN_DISP = 5, DROP_INP_HT = 2, DROP_DISP = 6, ABOUT_PAGE = 7
 
-};
+};//the input states get 0 - 2 so I can use the arrays and not duplicate code for everything here.
+
+bool TakeInput = false;
 //AppStat is an enum that we can use to tell our display mode to switch to a particular mode. 
 /* Unknown we can use to do Error Handling
 	START_SCREEN tells it to display the first initial start screen, MENU is similar
@@ -49,6 +51,11 @@ enum class AppStat
 
 AppStat DispStat = AppStat::UNKNOWN;
 
+
+float values[3];//the values we need are stored in this array as floats
+
+std::string inp[3];//we save the strings we want to flush in this. They're small numbers so this should work fine for our purposes. Saving it here allows us to implement backspace easily and error hnadling later on is also easier
+
 void KeyProc(unsigned char key, int x, int y)//This is function bound to the keystroke from my keyboard
 {
 	
@@ -61,6 +68,29 @@ void KeyProc(unsigned char key, int x, int y)//This is function bound to the key
 	{
 		DispStat = AppStat::MENU;
 		glutPostRedisplay();
+	}
+	if (TakeInput)//we process and take input here. common processing for each varaible
+	{
+		if (key == 13)
+		{
+			//enter key	
+			TakeInput = false;
+			glutPostRedisplay();
+		}
+		else if(key == 8)
+		{
+			int len = inp[(int)DispStat].length();
+			inp[(int)DispStat] = inp[(int)DispStat].substr(0, (len - 1));//extract everything but the last charcter here.
+			values[(int)DispStat] = std::stof(inp[(int)DispStat]);//save the value so we can do stuff with it. I'll try and flush it into a buffer later on but there's no noticable performance impact as of now.
+			glutPostRedisplay();
+		}
+		else
+		{
+			inp[(int)DispStat].push_back(key);
+			values[(int)DispStat] = std::stof(inp[(int)DispStat]);
+			glutPostRedisplay();
+		}
+
 	}
 	if (DispStat == AppStat::START_SCREEN)
 	{
@@ -79,11 +109,13 @@ void KeyProc(unsigned char key, int x, int y)//This is function bound to the key
 		if (key == '1')
 		{
 			DispStat = AppStat::PRJMTN_INP_FIRSTVAR;
+			TakeInput = true;
 			glutPostRedisplay();
 		}
 		else if (key == '2')
 		{
 			DispStat = AppStat::DROP_INP_HT;
+			TakeInput = true;
 			glutPostRedisplay();
 		}
 		else if (key == '3')
@@ -97,7 +129,7 @@ void KeyProc(unsigned char key, int x, int y)//This is function bound to the key
 		}
 	}
 }
-std::stringstream inp;
+
 
 void disp()
 {
@@ -138,7 +170,7 @@ void disp()
 		glFlush();
 	}
 
-	else if (DispStat == AppStat::PRJMTN_INP_FIRSTVAR || DispStat == AppStat::PRJMTN_INP_SECONDVAR)
+	else if (DispStat == AppStat::PRJMTN_INP_FIRSTVAR)
 	{
 		glClearColor(0.15, 0.15, 0.15, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -147,8 +179,54 @@ void disp()
 		SetFont(GLUT_BITMAP_HELVETICA_18);
 		glColor3f(0.0, 0.0, 0.0);
 		DrawString(-0.3, 0.8, 0.0, "Projectile Screen");
+		if (TakeInput)
+		{
+			DrawString(-0.3, 0.5, 0.0, "The Value Entered is:");
+			char buf[20];
+			snprintf(buf, sizeof(buf), "%f", values[0]); //converts a float into a character array so we can display it
+			DrawString(-0.3, 0.3, 0.0, buf );
+		}
+		else
+		{
+			DispStat = AppStat::PRJMTN_INP_SECONDVAR;
+			TakeInput = true;
+			glutPostRedisplay();
+			
+		}
 		glFlush();
 	}
+	else if (DispStat == AppStat::PRJMTN_INP_SECONDVAR)
+	{
+		glClearColor(0.15, 0.15, 0.15, 1.0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glLoadIdentity();
+
+		SetFont(GLUT_BITMAP_HELVETICA_18);
+		glColor3f(0.0, 0.0, 0.0);
+		DrawString(-0.3, 0.8, 0.0, "Projectile Screen for the second value:");
+		if (TakeInput)
+		{
+			DrawString(-0.3, 0.5, 0.0, "The Value Entered is:");
+			char buf[20];
+			snprintf(buf, sizeof(buf), "%f", values[1]);
+			DrawString(-0.3, 0.3, 0.0, buf);
+			
+		}
+		else
+		{
+			DispStat = AppStat::PRJMTN_DISP;
+			
+			//DEBUG was below
+			/*std::cout << "\nThe first value entered is:\n";
+			std::cout << values[0];
+			std::cout << "\nThe second value entered is:\n";
+			std::cout << values[1];*/
+			glutPostRedisplay();
+
+		}
+		glFlush();
+	}
+	
 	else if (DispStat == AppStat::DROP_INP_HT)
 	{
 		glClearColor(0.15, 0.15, 0.15, 1.0);
@@ -158,8 +236,49 @@ void disp()
 		SetFont(GLUT_BITMAP_HELVETICA_18);
 		glColor3f(0.0, 0.0, 0.0);
 		DrawString(-0.3, 0.8, 0.0, "Drop Screen");
+		if (TakeInput)
+		{
+			DrawString(-0.3, 0.5, 0.0, "The Value Entered is:");
+			char buf[20];
+			snprintf(buf, sizeof(buf), "%f", values[2]);//converts a float into a character array so we can display it
+			DrawString(-0.3, 0.3, 0.0, buf);
+			
+		}
+		else
+		{
+			DispStat = AppStat::DROP_DISP;
+			//Debug stuff is here
+			/*std::cout << "\nThe value for height entered is:\n";
+			std::cout << values[2];*/
+			glutPostRedisplay();
+
+		}
+		glFlush();
+		
+	}
+	else if (DispStat == AppStat::PRJMTN_DISP)
+	{
+		glClearColor(0.15, 0.15, 0.15, 1.0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glLoadIdentity();
+
+		SetFont(GLUT_BITMAP_HELVETICA_18);
+		glColor3f(0.0, 0.0, 0.0);
+		DrawString(-0.3, 0.8, 0.0, "Here we demo the projectile motion:");
 		glFlush();
 	}
+	else if (DispStat == AppStat::DROP_DISP)
+	{
+		glClearColor(0.15, 0.15, 0.15, 1.0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glLoadIdentity();
+
+		SetFont(GLUT_BITMAP_HELVETICA_18);
+		glColor3f(0.0, 0.0, 0.0);
+		DrawString(-0.3, 0.8, 0.0, "Here we demo the drop thingy");
+		glFlush();
+	}
+
 	else if (DispStat == AppStat::ABOUT_PAGE)
 	{
 		glClearColor(0.15, 0.15, 0.15, 1.0);
