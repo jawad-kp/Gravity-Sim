@@ -9,6 +9,8 @@
 
 void* Currentfont; //saves the font as a void pointer
 
+void ResetValues();
+
 
 void SetFont(void* font)
 {
@@ -191,7 +193,6 @@ void disp()
 		glClearColor(0.15, 0.15, 0.15, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glLoadIdentity();
-
 		SetFont(GLUT_BITMAP_HELVETICA_18);
 		glColor3f(0.0, 0.0, 0.0);
 		DrawString(-0.3, 0.8, 0.0, "Projectile Motion and Garvity Simulation");
@@ -210,6 +211,7 @@ void disp()
 		glClearColor(0.15, 0.15, 0.15, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glLoadIdentity();
+		ResetValues();
 
 		SetFont(GLUT_BITMAP_HELVETICA_18);
 		glColor3f(0.0, 0.0, 0.0);
@@ -402,4 +404,14 @@ double DropTCalc(float dis)
 	double temp = (2 * dis) / 9.8;
 	double tm = sqrt(temp);
 	return tm;
+}
+
+void ResetValues()
+{
+	values[0] = 0;
+	values[1] = 0;
+	values[2] = 0;
+	inp[0] = "";
+	inp[1] = "";
+	inp[2] = "";
 }
