@@ -4,6 +4,7 @@
 #include<gl/GLU.h>//this is apparantly built in. Even glew was built in. We techically only needed to set the preprocessor thingy for it. GL is our include and gl is the built-in shit from Visual Studio.
 #include<iostream>
 #include<string>
+#include<math.h>
 //#include<sstream>
 
 void* Currentfont; //saves the font as a void pointer
@@ -14,7 +15,7 @@ void SetFont(void* font)
 	Currentfont = font;
 }//allows you to reset the font
 
-void DrawString(float x, float y, float z, const char* string)
+void DrawString(double x, double y, double z, const char* string)
 {
 	const char* c;
 	glRasterPos3f(x, y, z);
@@ -25,6 +26,15 @@ void DrawString(float x, float y, float z, const char* string)
 		glutBitmapCharacter(Currentfont, *c);
 	}
 }//This function draws our string in the position we ask it too. This way it's abstracted and cleaner if we have to display multiple strings
+
+void reshape(int width, int height)
+{
+	glViewport(0, 0, 750, 750);
+	//glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	//gluOrtho2D(-10, 10, -10, 10);
+	//glMatrixMode(GL_MODELVIEW);
+}
 
 
 
@@ -49,12 +59,15 @@ bool TakeInput = false;
 
 
 
-AppStat DispStat = AppStat::UNKNOWN;
+AppStat DispStat = AppStat::DROP_DISP;
 
 
 float values[3];//the values we need are stored in this array as floats
 
 std::string inp[3];//we save the strings we want to flush in this. They're small numbers so this should work fine for our purposes. Saving it here allows us to implement backspace easily and error hnadling later on is also easier
+double DropPos = 8.0, DropTime = 0.0;
+double TotalDropTime = 0.0;
+double DropTCalc(float);
 
 void KeyProc(unsigned char key, int x, int y)//This is function bound to the keystroke from my keyboard
 {
@@ -67,6 +80,10 @@ void KeyProc(unsigned char key, int x, int y)//This is function bound to the key
 	if (key == 'b')//Remove on deploy Use this to go back to menu incase you need to test something.
 	{
 		DispStat = AppStat::MENU;
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		gluOrtho2D(-1, 1, -1, 1);
+		glMatrixMode(GL_MODELVIEW);
 		glutPostRedisplay();
 	}
 	if (TakeInput)//we process and take input here. common processing for each varaible
@@ -138,6 +155,34 @@ void KeyProc(unsigned char key, int x, int y)//This is function bound to the key
 	}
 }
 
+void animater(int a)
+{
+	//glutTimerFunc(1000 / 60, animater, 0);
+	if (DispStat == AppStat::DROP_DISP)
+	{
+		if (DropTime < TotalDropTime && DropPos > -47.5)
+		{
+			DropTime = DropTime + 0.016667;//this wasn't taking 1/60 for some reason and I hard-coded and made the rest doubles for it to work
+			double DisInM = -4.9 * (DropTime * DropTime); // s = 0.5gt^2 => 0.5g = 4.9 (negative because we goin down.)
+			std::cout << "\nSphere should've moved by:\n";
+			std::cout << DisInM;
+			std::cout << "\nTime Elapsed = \n";
+			std::cout << DropTime;
+
+			DropPos += DisInM;//remove distance travelled 
+			
+
+			
+
+		}
+		//glutSwapBuffers();
+
+		
+
+	}
+	glutPostRedisplay();
+}
+
 
 void disp()
 {
@@ -198,6 +243,7 @@ void disp()
 		{
 			DispStat = AppStat::PRJMTN_INP_SECONDVAR;
 			TakeInput = true;
+			glutSwapBuffers();
 			glutPostRedisplay();
 			
 		}
@@ -243,10 +289,10 @@ void disp()
 
 		SetFont(GLUT_BITMAP_HELVETICA_18);
 		glColor3f(0.0, 0.0, 0.0);
-		DrawString(-0.3, 0.8, 0.0, "Drop Screen");
+		DrawString(-0.3, 0.8, 0.0, "Drop Motion Simulator");
 		if (TakeInput)
 		{
-			DrawString(-0.3, 0.5, 0.0, "The Value Entered is:");
+			DrawString(-0.3, 0.5, 0.0, "Enter the height of the drop:");
 			char buf[20];
 			snprintf(buf, sizeof(buf), "%f", values[2]);//converts a float into a character array so we can display it
 			DrawString(-0.3, 0.3, 0.0, buf);
@@ -258,6 +304,14 @@ void disp()
 			//Debug stuff is here
 			/*std::cout << "\nThe value for height entered is:\n";
 			std::cout << values[2];*/
+
+			glMatrixMode(GL_PROJECTION);
+			glLoadIdentity();
+			gluOrtho2D(-50, 50, -50, 50);//
+			glMatrixMode(GL_MODELVIEW);
+			DropPos = values[2] - 50 - 2.5;//Initialising where you drop or drop height.
+			//glutTimerFunc(0, animater, 0);
+			TotalDropTime = DropTCalc(values[2]);
 			glutPostRedisplay();
 
 		}
@@ -277,18 +331,33 @@ void disp()
 	}
 	else if (DispStat == AppStat::DROP_DISP)
 	{
+		
 		glClearColor(0.15, 0.15, 0.15, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 		glLoadIdentity();
 
-		SetFont(GLUT_BITMAP_HELVETICA_18);
-		glColor3f(0.0, 0.0, 0.0);
-		DrawString(-0.3, 0.8, 0.0, "Here we demo the drop thingy");
+		glMatrixMode(GL_PROJECTION);
+		glutTimerFunc(1000/60, animater, 0);//call animater once every 1000/60th of a milli second. (60fps is the refresh atm)
+		glLoadIdentity();
+		gluOrtho2D(-50, 50, -50, 50);
+		//I am changing the projection to 100 total span. we can make it bigger but This looks fine so far.
+		glMatrixMode(GL_MODELVIEW);
+		glTranslatef(15,DropPos,0);//we basically move our camera by the distance specified here.
+		
+		/*We need to do this because we can only draw a sphere at the origin. So, I change where the origin is, 
+		instead of moving object. 60 looks smooth and because we have a black~ish background, no dropped frames 
+		that I can make out. */
+		
+		
+
+		glutSolidSphere(2.5, 100, 100);//draws a solid sphere of radius 2.5. This is thus far, the most computationally intensive part from what I could gather. I don't have a GPU I can loan this too nor am I using shader. So this will be it.
+		
 		glFlush();
 	}
 
 	else if (DispStat == AppStat::ABOUT_PAGE)
 	{
+		
 		glClearColor(0.15, 0.15, 0.15, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glLoadIdentity();
@@ -309,18 +378,28 @@ int main(int argc, char** argv)
 	glutInit(&argc, argv);//initialising glut
 	DispStat = AppStat::START_SCREEN;
 
-	glutInitDisplayMode(GLUT_RGB);
+	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
 
 	glutInitWindowPosition(0,0);//initial position in pixels This is optional and not specifying it will mean window is at random location.
-	glutInitWindowSize(1300,750);//size of the window
+	glutInitWindowSize(1000,1000);//size of the window
 
 
 	glutCreateWindow("lel");
 	glutDisplayFunc(disp);
+	glutReshapeFunc(reshape);
+	//glutTimerFunc(0, animater, 0);
+
 	glutKeyboardFunc(KeyProc);
 
 
 	glutMainLoop();
 
 
+}
+
+double DropTCalc(float dis)
+{
+	double temp = (2 * dis) / 9.8;
+	double tm = sqrt(temp);
+	return tm;
 }
