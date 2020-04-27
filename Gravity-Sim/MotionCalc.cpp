@@ -5,7 +5,25 @@
 #include<iostream>
 #include<string>
 #include<math.h>
-//#include<sstream>
+
+/*
+Equations of Motion to implement:
+	Total Time of Flight:
+		t = (2*u*sin(theta))/g
+
+	At a time interval t
+
+	x = u*t*cos(theta)
+
+	y = u*t*sin(theta) - 0.5*(g*t*t)
+
+	TODO:
+
+	Use That time in air and calculate x and y at each point in time //sorta done
+
+	Map that location to sphere's co-ordinates and move that shit.//some small oofs associated with this.
+
+*/
 
 void* Currentfont; //saves the font as a void pointer
 
@@ -17,7 +35,7 @@ void SetFont(void* font)
 	Currentfont = font;
 }//allows you to reset the font
 
-void DrawString(double x, double y, double z, const char* string)
+void DrawString(float x, float y, float z, const char* string)
 {
 	const char* c;
 	glRasterPos3f(x, y, z);
@@ -42,7 +60,7 @@ void reshape(int width, int height)
 
 enum class AppStat
 {
-	UNKNOWN = -1, START_SCREEN = 3, MENU = 4, PRJMTN_INP_FIRSTVAR = 0, PRJMTN_INP_SECONDVAR = 1, 
+	UNKNOWN = -1, START_SCREEN = 3, MENU = 4, PRJMTN_INP_INIT_VELOCITY = 0, PRJMTN_INP_THETA = 1, 
 	PRJMTN_DISP = 5, DROP_INP_HT = 2, DROP_DISP = 6, ABOUT_PAGE = 7
 
 };//the input states get 0 - 2 so I can use the arrays and not duplicate code for everything here.
@@ -61,7 +79,7 @@ bool TakeInput = false;
 
 
 
-AppStat DispStat = AppStat::DROP_DISP;
+AppStat DispStat = AppStat::UNKNOWN;
 
 
 float values[3];//the values we need are stored in this array as floats
@@ -70,6 +88,10 @@ std::string inp[3];//we save the strings we want to flush in this. They're small
 double DropPos = 8.0, DropTime = 0.0;
 double TotalDropTime = 0.0;
 double DropTCalc(float);
+double ToF = 0.0;
+double uSinTh = 0.0, uCosTh = 0.0,TimeInAir = 0.0;//u*sin(theta) and u*cos(th) precalculated to optimise for speed.
+double xProj, yProj;
+double TimeOfFlight(float, float);
 
 void KeyProc(unsigned char key, int x, int y)//This is function bound to the keystroke from my keyboard
 {
@@ -102,6 +124,7 @@ void KeyProc(unsigned char key, int x, int y)//This is function bound to the key
 			if (len - 1 <= 0)
 			{
 				values[(int)DispStat] = 0;
+				inp[(int)DispStat] = "";
 				glutPostRedisplay();
 				return;
 			}//if they enter backspace and there's nothing to clear.
@@ -135,7 +158,7 @@ void KeyProc(unsigned char key, int x, int y)//This is function bound to the key
 	{
 		if (key == '1')
 		{
-			DispStat = AppStat::PRJMTN_INP_FIRSTVAR;
+			DispStat = AppStat::PRJMTN_INP_INIT_VELOCITY;
 			TakeInput = true;
 			glutPostRedisplay();
 		}
@@ -176,6 +199,23 @@ void animater(int a)
 
 			
 
+		}
+
+		else if (DispStat == AppStat::PRJMTN_DISP)
+		{
+			if (TimeInAir < ToF)
+			{
+				/*
+					At a time interval t
+						
+						x = u*t*cos(theta)
+						
+						y = u*t*sin(theta) - 0.5*(g*t*t)
+				*/
+				xProj = uCosTh * TimeInAir;
+				yProj = uSinTh * TimeInAir - 4.9 * TimeInAir * TimeInAir;
+				TimeInAir += 0.016666667;
+			}
 		}
 		//glutSwapBuffers();
 
@@ -225,7 +265,7 @@ void disp()
 		glFlush();
 	}
 
-	else if (DispStat == AppStat::PRJMTN_INP_FIRSTVAR)
+	else if (DispStat == AppStat::PRJMTN_INP_INIT_VELOCITY)
 	{
 		glClearColor(0.15, 0.15, 0.15, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -236,14 +276,14 @@ void disp()
 		DrawString(-0.3, 0.8, 0.0, "Projectile Screen");
 		if (TakeInput)
 		{
-			DrawString(-0.3, 0.5, 0.0, "The Value Entered is:");
+			DrawString(-0.3, 0.5, 0.0, "Initial Velocity (m/s):");
 			char buf[20];
 			snprintf(buf, sizeof(buf), "%f", values[0]); //converts a float into a character array so we can display it
 			DrawString(-0.3, 0.3, 0.0, buf );
 		}
 		else
 		{
-			DispStat = AppStat::PRJMTN_INP_SECONDVAR;
+			DispStat = AppStat::PRJMTN_INP_THETA;
 			TakeInput = true;
 			glutSwapBuffers();
 			glutPostRedisplay();
@@ -251,7 +291,7 @@ void disp()
 		}
 		glFlush();
 	}
-	else if (DispStat == AppStat::PRJMTN_INP_SECONDVAR)
+	else if (DispStat == AppStat::PRJMTN_INP_THETA)
 	{
 		glClearColor(0.15, 0.15, 0.15, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -262,7 +302,7 @@ void disp()
 		DrawString(-0.3, 0.8, 0.0, "Projectile Screen for the second value:");
 		if (TakeInput)
 		{
-			DrawString(-0.3, 0.5, 0.0, "The Value Entered is:");
+			DrawString(-0.3, 0.5, 0.0, "Projectile Angle:");
 			char buf[20];
 			snprintf(buf, sizeof(buf), "%f", values[1]);
 			DrawString(-0.3, 0.3, 0.0, buf);
@@ -271,12 +311,14 @@ void disp()
 		else
 		{
 			DispStat = AppStat::PRJMTN_DISP;
-			
-			//DEBUG was below
-			/*std::cout << "\nThe first value entered is:\n";
-			std::cout << values[0];
-			std::cout << "\nThe second value entered is:\n";
-			std::cout << values[1];*/
+
+			ToF = TimeOfFlight(values[0], values[1]);
+			std::cout << "The Time of Flight is:\n";
+
+			std::cout << ToF<<std::endl;
+			uSinTh = values[0] * sin(values[1]);
+			uCosTh = values[0] * cos(values[1]); //Saving u*sin(theta) and u*cos(theta) so we won't waste compute time with calls
+
 			glutPostRedisplay();
 
 		}
@@ -326,9 +368,8 @@ void disp()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glLoadIdentity();
 
-		SetFont(GLUT_BITMAP_HELVETICA_18);
-		glColor3f(0.0, 0.0, 0.0);
-		DrawString(-0.3, 0.8, 0.0, "Here we demo the projectile motion:");
+
+
 		glFlush();
 	}
 	else if (DispStat == AppStat::DROP_DISP)
@@ -357,6 +398,9 @@ void disp()
 		glFlush();
 	}
 
+
+
+
 	else if (DispStat == AppStat::ABOUT_PAGE)
 	{
 		
@@ -380,7 +424,7 @@ int main(int argc, char** argv)
 	glutInit(&argc, argv);//initialising glut
 	DispStat = AppStat::START_SCREEN;
 
-	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
+	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GL_DEPTH);
 
 	glutInitWindowPosition(0,0);//initial position in pixels This is optional and not specifying it will mean window is at random location.
 	glutInitWindowSize(1000,1000);//size of the window
@@ -404,6 +448,17 @@ double DropTCalc(float dis)
 	double temp = (2 * dis) / 9.8;
 	double tm = sqrt(temp);
 	return tm;
+}
+
+double TimeOfFlight(float velo, float ang)
+{
+	/*
+		t = (2*u*sin(theta))/g 
+	*/
+	double t = 2 * velo * sin(ang) / 9.8;
+	return t;
+
+	
 }
 
 void ResetValues()
