@@ -58,6 +58,7 @@ void reshape(int width, int height)
 
 
 
+
 enum class AppStat
 {
 	UNKNOWN = -1, START_SCREEN = 3, MENU = 4, PRJMTN_INP_INIT_VELOCITY = 0, PRJMTN_INP_THETA = 1,
@@ -228,9 +229,13 @@ void animater(int a)
 
 void disp()
 {
+	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);			// White Background
+	glClearDepth(1.0f);
+	glEnable(GL_DEPTH_TEST);
+
+
 	if (DispStat == AppStat::START_SCREEN)
 	{
-		glClearColor(0.15, 0.15, 0.15, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glLoadIdentity();
 		SetFont(GLUT_BITMAP_HELVETICA_18);
@@ -248,7 +253,7 @@ void disp()
 
 	else if (DispStat == AppStat::MENU)
 	{
-		glClearColor(0.15, 0.15, 0.15, 1.0);
+		
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glLoadIdentity();
 		ResetValues();
@@ -267,7 +272,6 @@ void disp()
 
 	else if (DispStat == AppStat::PRJMTN_INP_INIT_VELOCITY)
 	{
-		glClearColor(0.15, 0.15, 0.15, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glLoadIdentity();
 
@@ -293,7 +297,7 @@ void disp()
 	}
 	else if (DispStat == AppStat::PRJMTN_INP_THETA)
 	{
-		glClearColor(0.15, 0.15, 0.15, 1.0);
+		
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glLoadIdentity();
 
@@ -327,7 +331,6 @@ void disp()
 
 	else if (DispStat == AppStat::PRJMTN_DISP)
 	{
-		glClearColor(0.15, 0.15, 0.15, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glLoadIdentity();
 
@@ -347,8 +350,7 @@ void disp()
 	}
 	else if (DispStat == AppStat::DROP_INP_HT)
 	{
-		glClearColor(0.15, 0.15, 0.15, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glLoadIdentity();
 
 		SetFont(GLUT_BITMAP_HELVETICA_18);
@@ -385,9 +387,7 @@ void disp()
 
 	else if (DispStat == AppStat::DROP_DISP)
 	{
-
-		glClearColor(0.15, 0.15, 0.15, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 		glLoadIdentity();
 
 		glMatrixMode(GL_PROJECTION);
@@ -415,8 +415,8 @@ void disp()
 	else if (DispStat == AppStat::ABOUT_PAGE)
 	{
 
-		glClearColor(0.15, 0.15, 0.15, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 		glLoadIdentity();
 
 		SetFont(GLUT_BITMAP_HELVETICA_18);
@@ -433,23 +433,21 @@ void disp()
 int main(int argc, char** argv)
 {
 	glutInit(&argc, argv);//initialising glut
-	DispStat = AppStat::START_SCREEN;
-
-	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE|GL_DEPTH);
-
-	glutInitWindowPosition(0, 0);//initial position in pixels This is optional and not specifying it will mean window is at random location.
-	glutInitWindowSize(1000, 1000);//size of the window
-
-
-	glutCreateWindow("lel");
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
+	glutInitWindowPosition(10, 10);//initial position in pixels This is optional and not specifying it will mean window is at random location.
+	glutInitWindowSize(1000,1000);//size of the window
+	glutCreateWindow("TESTING WINDOW");
 	glutDisplayFunc(disp);
 	glutReshapeFunc(reshape);
-	//glutTimerFunc(0, animater, 0);
+	
+	DispStat = AppStat::START_SCREEN;
+
 
 	glutKeyboardFunc(KeyProc);
 
 
 	glutMainLoop();
+	return 0;
 
 
 }
