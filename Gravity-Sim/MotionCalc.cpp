@@ -228,6 +228,7 @@ void animater(int a)
 
 void disp()
 {
+	
 	if (DispStat == AppStat::START_SCREEN)
 	{
 		glClearColor(0.15, 0.15, 0.15, 1.0);
@@ -329,6 +330,7 @@ void disp()
 	{
 		glClearColor(0.15, 0.15, 0.15, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glEnable(GL_DEPTH_TEST);
 		glLoadIdentity();
 
 		glMatrixMode(GL_PROJECTION);
@@ -388,6 +390,7 @@ void disp()
 
 		glClearColor(0.15, 0.15, 0.15, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glEnable(GL_DEPTH_TEST);
 		glLoadIdentity();
 
 		glMatrixMode(GL_PROJECTION);
@@ -435,7 +438,7 @@ int main(int argc, char** argv)
 	glutInit(&argc, argv);//initialising glut
 	DispStat = AppStat::START_SCREEN;
 
-	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);//it is glut depth. That was the problem. Works now. no issues
 
 	glutInitWindowPosition(0, 0);//initial position in pixels This is optional and not specifying it will mean window is at random location.
 	glutInitWindowSize(1000, 1000);//size of the window
