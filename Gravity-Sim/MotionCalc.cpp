@@ -49,7 +49,7 @@ void DrawString(float x, float y, float z, const char* string)
 
 void reshape(int width, int height)
 {
-	glViewport(0, 0, 750, 750);
+	glViewport(0, 0, 750,750);
 	//glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	//gluOrtho2D(-10, 10, -10, 10);
@@ -85,12 +85,12 @@ AppStat DispStat = AppStat::UNKNOWN;
 float values[3];//the values we need are stored in this array as floats
 
 std::string inp[3];//we save the strings we want to flush in this. They're small numbers so this should work fine for our purposes. Saving it here allows us to implement backspace easily and error hnadling later on is also easier
-double DropPos = 8.0, DropTime = 0.0;
+double DropPos = 0.0, DropTime = 0.0;
 double TotalDropTime = 0.0;
 double DropTCalc(float);
 double ToF = 0.0;
 double uSinTh = 0.0, uCosTh = 0.0, TimeInAir = 0.0;//u*sin(theta) and u*cos(th) precalculated to optimise for speed.
-double xProj, yProj;
+double xProj = 46.0, yProj = -47.5;
 double TimeOfFlight(float, float);
 
 void KeyProc(unsigned char key, int x, int y)//This is function bound to the keystroke from my keyboard
@@ -185,7 +185,7 @@ void animater(int a)
 	//glutTimerFunc(1000 / 60, animater, 0);
 	if (DispStat == AppStat::DROP_DISP)
 	{
-		if (DropTime < TotalDropTime && DropPos > -47.5)
+		if (DropTime < TotalDropTime && DropPos/100 >= -47.5)
 		{
 			DropTime = DropTime + 0.016667;//this wasn't taking 1/60 for some reason and I hard-coded and made the rest doubles for it to work
 			double DisInM = -4.9 * (DropTime * DropTime); // s = 0.5gt^2 => 0.5g = 4.9 (negative because we goin down.)
@@ -201,26 +201,27 @@ void animater(int a)
 
 		}
 
-		else if (DispStat == AppStat::PRJMTN_DISP)
-		{
-			if (TimeInAir < ToF)
-			{
-				/*
-					At a time interval t
-
-						x = u*t*cos(theta)
-
-						y = u*t*sin(theta) - 0.5*(g*t*t)
-				*/
-				xProj = uCosTh * TimeInAir;
-				yProj = uSinTh * TimeInAir - 4.9 * TimeInAir * TimeInAir;
-				TimeInAir += 0.016666667;
-			}
-		}
+		
 		//glutSwapBuffers();
+	}
 
+	else if (DispStat == AppStat::PRJMTN_DISP)
+	{
+		if (TimeInAir < ToF && xProj/50 >= -46.0 && yProj/50 >= -47.5)
+		{
+			/*
+				At a time interval t
 
+					x = u*t*cos(theta)
 
+					y = u*t*sin(theta) - 0.5*(g*t*t)
+			*/
+			xProj -= uCosTh * TimeInAir;
+			double YinM;
+			YinM = uSinTh * TimeInAir - 4.9 * TimeInAir * TimeInAir;
+			yProj = YinM - 47.5;
+			TimeInAir += 0.016666667;
+		}
 	}
 	glutPostRedisplay();
 }
@@ -312,13 +313,43 @@ void disp()
 		else
 		{
 			DispStat = AppStat::PRJMTN_DISP;
+			xProj = 46.0;
+			yProj = -47.5;//initialised correctly
 
-			ToF = TimeOfFlight(values[0], values[1]);
-			std::cout << "The Time of Flight is:\n";
+			//xProj = -46.0;//Final X value that can be rendered, just fyi
+			//yProj = -47.5;
 
-			std::cout << ToF << std::endl;
-			uSinTh = values[0] * sin(values[1]);
-			uCosTh = values[0] * cos(values[1]); //Saving u*sin(theta) and u*cos(theta) so we won't waste compute time with calls
+			
+
+			
+			
+			//uCosTh = values[0] * cos(values[1]);//Saving u*sin(theta) and u*cos(theta) so we won't waste compute time with calls
+				
+				values[1] = (4.0 * std::atan2(1.0, 1.0)) * values[1] / 180.0;//deg2Rad
+				ToF = TimeOfFlight(values[0], values[1]);
+				std::cout << "The Time of Flight is:\n";
+				std::cout << ToF << std::endl;
+			
+				uSinTh = values[0] * sin(values[1]);
+				uCosTh = values[0] * cos(values[1]);
+				if (values[1] == 90)
+				{	
+					uCosTh = 0;
+				}
+				else if (values[1] == 0)
+				{
+					uSinTh = 0;
+				}
+
+				std::cout << "The sin is:" << std::endl;
+				std::cout << sin(values[1]) << std::endl;
+
+
+			
+
+
+			
+
 
 			glutPostRedisplay();
 
@@ -339,7 +370,7 @@ void disp()
 		gluOrtho2D(-50, 50, -50, 50);
 		//I am changing the projection to 100 total span. we can make it bigger but This looks fine so far.
 		glMatrixMode(GL_MODELVIEW);
-		//glTranslatef(15, DropPos, 0);//we basically move our camera by the distance specified here.
+		glTranslatef(xProj/50, yProj/50, 0);//we basically move our camera by the distance specified here.
 
 
 		glutSolidSphere(2.5, 100, 100);
@@ -375,7 +406,7 @@ void disp()
 			glLoadIdentity();
 			gluOrtho2D(-50, 50, -50, 50);//
 			glMatrixMode(GL_MODELVIEW);
-			DropPos = values[2] - 50 - 2.5;//Initialising where you drop or drop height.
+			DropPos = values[2];//Initialising where you drop or drop height.
 			//glutTimerFunc(0, animater, 0);
 			TotalDropTime = DropTCalc(values[2]);
 			glutPostRedisplay();
@@ -396,10 +427,10 @@ void disp()
 		glMatrixMode(GL_PROJECTION);
 		glutTimerFunc(1000 / 60, animater, 0);//call animater once every 1000/60th of a milli second. (60fps is the refresh atm)
 		glLoadIdentity();
-		gluOrtho2D(-50, 50, -50, 50);
+		gluOrtho2D(-50,50,-50,50);
 		//I am changing the projection to 100 total span. we can make it bigger but This looks fine so far.
 		glMatrixMode(GL_MODELVIEW);
-		glTranslatef(15, DropPos, 0);//we basically move our camera by the distance specified here.
+		glTranslatef(15, DropPos/100, 0);//we basically move our camera by the distance specified here.
 
 		/*We need to do this because we can only draw a sphere at the origin. So, I change where the origin is,
 		instead of moving object. 60 looks smooth and because we have a black~ish background, no dropped frames
@@ -436,7 +467,7 @@ void disp()
 int main(int argc, char** argv)
 {
 	glutInit(&argc, argv);//initialising glut
-	DispStat = AppStat::START_SCREEN;
+	DispStat = AppStat::MENU;
 
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);//it is glut depth. That was the problem. Works now. no issues
 
