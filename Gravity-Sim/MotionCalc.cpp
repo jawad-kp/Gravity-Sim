@@ -60,7 +60,7 @@ void reshape(int width, int height)
 
 enum class AppStat
 {
-	UNKNOWN = -1, START_SCREEN = 3, MENU = 4, PRJMTN_INP_INIT_VELOCITY = 0, PRJMTN_INP_THETA = 1, 
+	UNKNOWN = -1, START_SCREEN = 3, MENU = 4, PRJMTN_INP_INIT_VELOCITY = 0, PRJMTN_INP_THETA = 1,
 	PRJMTN_DISP = 5, DROP_INP_HT = 2, DROP_DISP = 6, ABOUT_PAGE = 7
 
 };//the input states get 0 - 2 so I can use the arrays and not duplicate code for everything here.
@@ -89,13 +89,13 @@ double DropPos = 8.0, DropTime = 0.0;
 double TotalDropTime = 0.0;
 double DropTCalc(float);
 double ToF = 0.0;
-double uSinTh = 0.0, uCosTh = 0.0,TimeInAir = 0.0;//u*sin(theta) and u*cos(th) precalculated to optimise for speed.
+double uSinTh = 0.0, uCosTh = 0.0, TimeInAir = 0.0;//u*sin(theta) and u*cos(th) precalculated to optimise for speed.
 double xProj, yProj;
 double TimeOfFlight(float, float);
 
 void KeyProc(unsigned char key, int x, int y)//This is function bound to the keystroke from my keyboard
 {
-	
+
 	if (key == 'q')//for debug, remove in deploy
 	{
 		exit(0);
@@ -118,7 +118,7 @@ void KeyProc(unsigned char key, int x, int y)//This is function bound to the key
 			TakeInput = false;
 			glutPostRedisplay();
 		}
-		else if(key == 8)
+		else if (key == 8)
 		{
 			int len = inp[(int)DispStat].length();
 			if (len - 1 <= 0)
@@ -130,7 +130,7 @@ void KeyProc(unsigned char key, int x, int y)//This is function bound to the key
 			}//if they enter backspace and there's nothing to clear.
 			std::cout << len << std::endl;
 			inp[(int)DispStat] = inp[(int)DispStat].substr(0, (len - 1));//extract everything but the last charcter here.
-			std::cout << inp[(int)DispStat]<<std::endl;
+			std::cout << inp[(int)DispStat] << std::endl;
 			values[(int)DispStat] = std::stof(inp[(int)DispStat]);//save the value so we can do stuff with it. I'll try and flush it into a buffer later on but there's no noticable performance impact as of now.
 			glutPostRedisplay();
 		}
@@ -195,9 +195,9 @@ void animater(int a)
 			std::cout << DropTime;
 
 			DropPos += DisInM;//remove distance travelled 
-			
 
-			
+
+
 
 		}
 
@@ -207,9 +207,9 @@ void animater(int a)
 			{
 				/*
 					At a time interval t
-						
+
 						x = u*t*cos(theta)
-						
+
 						y = u*t*sin(theta) - 0.5*(g*t*t)
 				*/
 				xProj = uCosTh * TimeInAir;
@@ -219,7 +219,7 @@ void animater(int a)
 		}
 		//glutSwapBuffers();
 
-		
+
 
 	}
 	glutPostRedisplay();
@@ -237,7 +237,7 @@ void disp()
 		glColor3f(0.0, 0.0, 0.0);
 		DrawString(-0.3, 0.8, 0.0, "Projectile Motion and Garvity Simulation");
 
-		DrawString( 0.15, 0.7, 0.0, " -By Jawad and Gaurav");
+		DrawString(0.15, 0.7, 0.0, " -By Jawad and Gaurav");
 
 		DrawString(-0.3, 0.0, 0.0, "Press X to Begin");
 		DrawString(-0.3, -0.1, 0.0, "Press Q to Quit");
@@ -279,7 +279,7 @@ void disp()
 			DrawString(-0.3, 0.5, 0.0, "Initial Velocity (m/s):");
 			char buf[20];
 			snprintf(buf, sizeof(buf), "%f", values[0]); //converts a float into a character array so we can display it
-			DrawString(-0.3, 0.3, 0.0, buf );
+			DrawString(-0.3, 0.3, 0.0, buf);
 		}
 		else
 		{
@@ -287,7 +287,7 @@ void disp()
 			TakeInput = true;
 			glutSwapBuffers();
 			glutPostRedisplay();
-			
+
 		}
 		glFlush();
 	}
@@ -306,7 +306,7 @@ void disp()
 			char buf[20];
 			snprintf(buf, sizeof(buf), "%f", values[1]);
 			DrawString(-0.3, 0.3, 0.0, buf);
-			
+
 		}
 		else
 		{
@@ -315,7 +315,7 @@ void disp()
 			ToF = TimeOfFlight(values[0], values[1]);
 			std::cout << "The Time of Flight is:\n";
 
-			std::cout << ToF<<std::endl;
+			std::cout << ToF << std::endl;
 			uSinTh = values[0] * sin(values[1]);
 			uCosTh = values[0] * cos(values[1]); //Saving u*sin(theta) and u*cos(theta) so we won't waste compute time with calls
 
@@ -324,7 +324,27 @@ void disp()
 		}
 		glFlush();
 	}
-	
+
+	else if (DispStat == AppStat::PRJMTN_DISP)
+	{
+		glClearColor(0.15, 0.15, 0.15, 1.0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glLoadIdentity();
+
+		glMatrixMode(GL_PROJECTION);
+		glutTimerFunc(1000 / 60, animater, 0);//call animater once every 1000/60th of a milli second. (60fps is the refresh atm)
+		glLoadIdentity();
+		gluOrtho2D(-50, 50, -50, 50);
+		//I am changing the projection to 100 total span. we can make it bigger but This looks fine so far.
+		glMatrixMode(GL_MODELVIEW);
+		//glTranslatef(15, DropPos, 0);//we basically move our camera by the distance specified here.
+
+
+		glutSolidSphere(2.5, 100, 100);
+
+
+		glFlush();
+	}
 	else if (DispStat == AppStat::DROP_INP_HT)
 	{
 		glClearColor(0.15, 0.15, 0.15, 1.0);
@@ -340,7 +360,7 @@ void disp()
 			char buf[20];
 			snprintf(buf, sizeof(buf), "%f", values[2]);//converts a float into a character array so we can display it
 			DrawString(-0.3, 0.3, 0.0, buf);
-			
+
 		}
 		else
 		{
@@ -360,41 +380,32 @@ void disp()
 
 		}
 		glFlush();
-		
+
 	}
-	else if (DispStat == AppStat::PRJMTN_DISP)
+	
+	else if (DispStat == AppStat::DROP_DISP)
 	{
+
 		glClearColor(0.15, 0.15, 0.15, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glLoadIdentity();
 
-
-
-		glFlush();
-	}
-	else if (DispStat == AppStat::DROP_DISP)
-	{
-		
-		glClearColor(0.15, 0.15, 0.15, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-		glLoadIdentity();
-
 		glMatrixMode(GL_PROJECTION);
-		glutTimerFunc(1000/60, animater, 0);//call animater once every 1000/60th of a milli second. (60fps is the refresh atm)
+		glutTimerFunc(1000 / 60, animater, 0);//call animater once every 1000/60th of a milli second. (60fps is the refresh atm)
 		glLoadIdentity();
 		gluOrtho2D(-50, 50, -50, 50);
 		//I am changing the projection to 100 total span. we can make it bigger but This looks fine so far.
 		glMatrixMode(GL_MODELVIEW);
-		glTranslatef(15,DropPos,0);//we basically move our camera by the distance specified here.
-		
-		/*We need to do this because we can only draw a sphere at the origin. So, I change where the origin is, 
-		instead of moving object. 60 looks smooth and because we have a black~ish background, no dropped frames 
+		glTranslatef(15, DropPos, 0);//we basically move our camera by the distance specified here.
+
+		/*We need to do this because we can only draw a sphere at the origin. So, I change where the origin is,
+		instead of moving object. 60 looks smooth and because we have a black~ish background, no dropped frames
 		that I can make out. */
-		
-		
+
+
 
 		glutSolidSphere(2.5, 100, 100);//draws a solid sphere of radius 2.5. This is thus far, the most computationally intensive part from what I could gather. I don't have a GPU I can loan this too nor am I using shader. So this will be it.
-		
+
 		glFlush();
 	}
 
@@ -403,7 +414,7 @@ void disp()
 
 	else if (DispStat == AppStat::ABOUT_PAGE)
 	{
-		
+
 		glClearColor(0.15, 0.15, 0.15, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glLoadIdentity();
@@ -415,7 +426,7 @@ void disp()
 	}
 	glutSwapBuffers();
 
-	
+
 }
 
 
@@ -424,10 +435,10 @@ int main(int argc, char** argv)
 	glutInit(&argc, argv);//initialising glut
 	DispStat = AppStat::START_SCREEN;
 
-	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GL_DEPTH);
+	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
 
-	glutInitWindowPosition(0,0);//initial position in pixels This is optional and not specifying it will mean window is at random location.
-	glutInitWindowSize(1000,1000);//size of the window
+	glutInitWindowPosition(0, 0);//initial position in pixels This is optional and not specifying it will mean window is at random location.
+	glutInitWindowSize(1000, 1000);//size of the window
 
 
 	glutCreateWindow("lel");
@@ -453,12 +464,12 @@ double DropTCalc(float dis)
 double TimeOfFlight(float velo, float ang)
 {
 	/*
-		t = (2*u*sin(theta))/g 
+		t = (2*u*sin(theta))/g
 	*/
 	double t = 2 * velo * sin(ang) / 9.8;
 	return t;
 
-	
+
 }
 
 void ResetValues()
