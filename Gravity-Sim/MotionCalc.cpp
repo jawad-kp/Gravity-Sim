@@ -35,10 +35,10 @@ void SetFont(void* font)
 	Currentfont = font;
 }//allows you to reset the font
 
-void DrawString(float x, float y, float z, const char* string)
+void DrawString(double x, double y, double z, const char* string)
 {
 	const char* c;
-	glRasterPos3f(x, y, z);
+	glRasterPos3d(x, y, z);
 
 	for (c = string; *c != '\0'; c++)
 	{
@@ -181,6 +181,8 @@ void KeyProc(unsigned char key, int x, int y)//This is function bound to the key
 	}
 }
 
+void plotTrajectory();
+
 void animater(int a)
 {
 	//glutTimerFunc(1000 / 60, animater, 0);
@@ -201,27 +203,22 @@ void animater(int a)
 
 
 		}
-
-		else if (DispStat == AppStat::PRJMTN_DISP)
+	}
+	else if (DispStat == AppStat::PRJMTN_DISP)
+	{
+		if (TimeInAir < ToF)
 		{
-			if (TimeInAir < ToF)
-			{
-				/*
-					At a time interval t
+			/*
+				At a time interval t
 
-						x = u*t*cos(theta)
+					x = u*t*cos(theta)
 
-						y = u*t*sin(theta) - 0.5*(g*t*t)
-				*/
-				xProj = uCosTh * TimeInAir;
-				yProj = uSinTh * TimeInAir - 4.9 * TimeInAir * TimeInAir;
-				TimeInAir += 0.016666667;
-			}
+					y = u*t*sin(theta) - 0.5*(g*t*t)
+			*/
+			xProj = uCosTh * TimeInAir;
+			yProj = uSinTh * TimeInAir - 4.9 * TimeInAir * TimeInAir;
+			TimeInAir += 0.016666667;
 		}
-		//glutSwapBuffers();
-
-
-
 	}
 	glutPostRedisplay();
 }
@@ -316,6 +313,8 @@ void disp()
 		{
 			DispStat = AppStat::PRJMTN_DISP;
 
+
+			values[1] = (4.0 * std::atan2(1.0, 1.0)) * values[1] / 180.0;//deg2Radians
 			ToF = TimeOfFlight(values[0], values[1]);
 			std::cout << "The Time of Flight is:\n";
 
@@ -335,15 +334,17 @@ void disp()
 		glLoadIdentity();
 
 		glMatrixMode(GL_PROJECTION);
-		glutTimerFunc(1000 / 60, animater, 0);//call animater once every 1000/60th of a milli second. (60fps is the refresh atm)
+		//call animater once every 1000/60th of a milli second. (60fps is the refresh atm)
 		glLoadIdentity();
-		gluOrtho2D(-50, 50, -50, 50);
+		gluOrtho2D(-100, 100, -100, 100);
 		//I am changing the projection to 100 total span. we can make it bigger but This looks fine so far.
 		glMatrixMode(GL_MODELVIEW);
-		//glTranslatef(15, DropPos, 0);//we basically move our camera by the distance specified here.
+		//we basically move our camera by the distance specified here.
+		//plotTrajectory(); --> Shows you the expected trajectory uncomment to verify that.
 
-
-		glutSolidSphere(2.5, 100, 100);
+		glutTimerFunc(1000/60, animater, 0);
+		glTranslatef(xProj, yProj, 0);
+		glutSolidSphere(2.5, 100, 100);//Start form 0 and travels exactly to the grid at the moment. Math is correct we need to figure out how to modify mapping and then this will be done.
 
 
 		glFlush();
@@ -478,4 +479,27 @@ void ResetValues()
 	inp[0] = "";
 	inp[1] = "";
 	inp[2] = "";
+	xProj = 0.0;
+	yProj = 0.0;
+}
+
+void plotTrajectory()
+{
+	double i = 0;
+	//double xProj, yProj;
+	for ( i = 0; i < ToF; i+= 0.0166667)
+	{
+		glPointSize(3);
+		 xProj = uCosTh * i;
+		 yProj = uSinTh * i - 4.9 * i * i;
+		glBegin(GL_POINTS);
+		
+		//TimeInAir += 0.016666667;
+		glVertex2d(xProj, yProj);
+		glEnd();
+		glFlush();
+	}
+
+	std::cout << "i after flush = " << i << std::endl;
+	std::cout << "Range covered = " << xProj << std::endl;
 }
