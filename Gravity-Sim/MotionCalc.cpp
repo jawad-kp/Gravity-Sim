@@ -486,8 +486,9 @@ void ResetValues()
 void plotTrajectory()
 {
 	double i = 0;
+
 	//double xProj, yProj;
-	for ( i = 0; i < ToF; i+= 0.0166667)
+	for ( i = 0, xProj = 0, yProj = 0; i < ToF; i+= 0.0166667)
 	{
 		glPointSize(3);
 		 xProj = uCosTh * i;
