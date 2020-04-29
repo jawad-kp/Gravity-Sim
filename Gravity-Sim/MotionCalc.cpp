@@ -207,7 +207,7 @@ void animater(int a)
 
 	else if (DispStat == AppStat::PRJMTN_DISP)
 	{
-		if (TimeInAir < ToF && xProj/50 >= -46.0 && yProj/50 >= -47.5)
+		if (TimeInAir < ToF && xProj/100 >= -46.0 && yProj/100 >= -47.5)
 		{
 			/*
 				At a time interval t
@@ -217,9 +217,9 @@ void animater(int a)
 					y = u*t*sin(theta) - 0.5*(g*t*t)
 			*/
 			xProj -= uCosTh * TimeInAir;
-			double YinM;
-			YinM = uSinTh * TimeInAir - 4.9 * TimeInAir * TimeInAir;
-			yProj = YinM - 47.5;
+			//double YinM;
+			yProj = uSinTh * TimeInAir - 4.9 * TimeInAir * TimeInAir;
+			//yProj = YinM - 47.5;
 			TimeInAir += 0.016666667;
 		}
 	}
@@ -370,7 +370,7 @@ void disp()
 		gluOrtho2D(-50, 50, -50, 50);
 		//I am changing the projection to 100 total span. we can make it bigger but This looks fine so far.
 		glMatrixMode(GL_MODELVIEW);
-		glTranslatef(xProj/50, yProj/50, 0);//we basically move our camera by the distance specified here.
+		glTranslatef(xProj/100, yProj/100, 0);//we basically move our camera by the distance specified here.
 
 
 		glutSolidSphere(2.5, 100, 100);
