@@ -93,6 +93,7 @@ double ToF = 0.0;
 double uSinTh = 0.0, uCosTh = 0.0, TimeInAir = 0.0;//u*sin(theta) and u*cos(th) precalculated to optimise for speed.
 double xProj, yProj;
 double TimeOfFlight(float, float);
+void DrawGrid();
 
 void KeyProc(unsigned char key, int x, int y)//This is function bound to the keystroke from my keyboard
 {
@@ -215,7 +216,7 @@ void animater(int a)
 
 					y = u*t*sin(theta) - 0.5*(g*t*t)
 			*/
-			xProj = uCosTh * TimeInAir;
+			xProj = (uCosTh * TimeInAir) - 87.7;//87.7 is leftmost co-ordinate
 			yProj = uSinTh * TimeInAir - 4.9 * TimeInAir * TimeInAir;
 			TimeInAir += 0.016666667;
 		}
@@ -342,8 +343,11 @@ void disp()
 		//we basically move our camera by the distance specified here.
 		//plotTrajectory(); --> Shows you the expected trajectory uncomment to verify that.
 
+		DrawGrid();
+		glColor3f(0, 1, 1);
 		glutTimerFunc(1000/60, animater, 0);
-		glTranslatef(xProj, yProj, 0);
+		glTranslated(xProj, yProj, 0);
+		//glTranslated(-95, 0, 0);//Right now it is at the leftmost part of the screen. Yet to be seen if I can travel 200m using it.
 		glutSolidSphere(2.5, 100, 100);//Start form 0 and travels exactly to the grid at the moment. Math is correct we need to figure out how to modify mapping and then this will be done.
 
 
@@ -479,7 +483,7 @@ void ResetValues()
 	inp[0] = "";
 	inp[1] = "";
 	inp[2] = "";
-	xProj = 0.0;
+	xProj = -87.7;//decent start? It looks right here.
 	yProj = 0.0;
 }
 
@@ -503,4 +507,20 @@ void plotTrajectory()
 
 	std::cout << "i after flush = " << i << std::endl;
 	std::cout << "Range covered = " << xProj << std::endl;
+}
+
+void DrawGrid()
+{
+	glBegin(GL_LINES);
+		glColor3f(1, 0, 0);
+		//X-Axis (ground)
+		glVertex2f(-90, -2.6);//screen left
+		glVertex2f(90, -2.6);//screen right
+
+		//Y-Axis
+		glVertex2f(-90, -2.6);
+		glVertex2f(-90, 100);
+
+	glEnd();
+
 }
