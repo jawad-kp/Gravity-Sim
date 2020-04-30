@@ -62,7 +62,7 @@ void reshape(int width, int height)
 enum class AppStat
 {
 	UNKNOWN = -1, START_SCREEN = 3, MENU = 4, PRJMTN_INP_INIT_VELOCITY = 0, PRJMTN_INP_THETA = 1,
-	PRJMTN_DISP = 5, DROP_INP_HT = 2, DROP_DISP = 6, ABOUT_PAGE = 7
+	PRJMTN_DISP = 5, PRJMTN_PLOT = 6, DROP_INP_HT = 2, DROP_DISP = 7, DROP_PLOT = 8, ABOUT_PAGE = 10
 
 };//the input states get 0 - 2 so I can use the arrays and not duplicate code for everything here.
 
@@ -93,6 +93,8 @@ double ToF = 0.0;
 double uSinTh = 0.0, uCosTh = 0.0, TimeInAir = 0.0;//u*sin(theta) and u*cos(th) precalculated to optimise for speed.
 double xProj, yProj;
 double TimeOfFlight(float, float);
+void DrawGrid();
+int pauseState = 0; //0 is play 1 is pause
 
 void KeyProc(unsigned char key, int x, int y)//This is function bound to the keystroke from my keyboard
 {
@@ -179,13 +181,41 @@ void KeyProc(unsigned char key, int x, int y)//This is function bound to the key
 			exit(0);
 		}
 	}
+	else if (DispStat == AppStat::PRJMTN_DISP || DispStat == AppStat::DROP_DISP)
+	{
+		if (key == 'p' || key == 'P' || key == ' ')
+		{
+			pauseState = pauseState == 0 ? 1 : 0;
+			glutPostRedisplay();
+		}
+		else if (key == 'r' || key == 'R')
+		{
+			ResetValues();
+			glutPostRedisplay();
+			return;
+		}
+		else if (key == 's' || key == 'S')
+		{
+			ResetValues();
+			if (DispStat == AppStat::PRJMTN_DISP)
+				DispStat = AppStat::PRJMTN_PLOT;
+			else if (DispStat == AppStat::DROP_DISP)
+				DispStat = AppStat::DROP_PLOT;
+			//move to next page for final values, if not leave it here idk TBD That's why else if and not just an else
+		}
+	}
 }
 
 void plotTrajectory();
 
 void animater(int a)
 {
-	//glutTimerFunc(1000 / 60, animater, 0);
+	
+	if (a == 1)
+	{
+		glutPostRedisplay();
+		return;
+	}
 	if (DispStat == AppStat::DROP_DISP)
 	{
 		if (DropTime < TotalDropTime && DropPos > -47.5)
@@ -215,7 +245,7 @@ void animater(int a)
 
 					y = u*t*sin(theta) - 0.5*(g*t*t)
 			*/
-			xProj = uCosTh * TimeInAir;
+			xProj = (uCosTh * TimeInAir) - 87.7;//87.7 is leftmost co-ordinate
 			yProj = uSinTh * TimeInAir - 4.9 * TimeInAir * TimeInAir;
 			TimeInAir += 0.016666667;
 		}
@@ -250,7 +280,7 @@ void disp()
 
 	else if (DispStat == AppStat::MENU)
 	{
-
+		
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glLoadIdentity();
 		ResetValues();
@@ -294,7 +324,7 @@ void disp()
 	}
 	else if (DispStat == AppStat::PRJMTN_INP_THETA)
 	{
-
+		
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glLoadIdentity();
 
@@ -342,16 +372,41 @@ void disp()
 		//we basically move our camera by the distance specified here.
 		//plotTrajectory(); --> Shows you the expected trajectory uncomment to verify that.
 
-		glutTimerFunc(1000 / 60, animater, 0);
-		glTranslatef(xProj, yProj, 0);
+		DrawGrid();
+		glColor3f(0, 1, 1);
+		glutTimerFunc(1000/60, animater, pauseState);
+		glTranslated(xProj, yProj, 0);
+		//glTranslated(-95, 0, 0);//Right now it is at the leftmost part of the screen. Yet to be seen if I can travel 200m using it.
 		glutSolidSphere(2.5, 100, 100);//Start form 0 and travels exactly to the grid at the moment. Math is correct we need to figure out how to modify mapping and then this will be done.
 
 
 		glFlush();
 	}
+
+	else if (DispStat == AppStat::PRJMTN_PLOT)
+	{
+		//should we animate trajectory? TBD
+
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glLoadIdentity();
+
+		glMatrixMode(GL_PROJECTION);
+		//call animater once every 1000/60th of a milli second. (60fps is the refresh atm)
+		glLoadIdentity();
+		gluOrtho2D(-100, 100, -100, 100);
+		//I am changing the projection to 100 total span. we can make it bigger but This looks fine so far.
+		glMatrixMode(GL_MODELVIEW);
+		//we basically move our camera by the distance specified here.
+		plotTrajectory();// --> Shows you the expected trajectory uncomment to verify that.
+
+		DrawGrid();
+		glColor3f(0, 1, 1);
+
+	}
+
 	else if (DispStat == AppStat::DROP_INP_HT)
 	{
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glLoadIdentity();
 
 		SetFont(GLUT_BITMAP_HELVETICA_18);
@@ -388,11 +443,11 @@ void disp()
 
 	else if (DispStat == AppStat::DROP_DISP)
 	{
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 		glLoadIdentity();
 
 		glMatrixMode(GL_PROJECTION);
-		glutTimerFunc(1000 / 60, animater, 0);//call animater once every 1000/60th of a milli second. (60fps is the refresh atm)
+		glutTimerFunc(1000 / 60, animater, pauseState);//call animater once every 1000/60th of a milli second. (60fps is the refresh atm)
 		glLoadIdentity();
 		gluOrtho2D(-50, 50, -50, 50);
 		//I am changing the projection to 100 total span. we can make it bigger but This looks fine so far.
@@ -416,8 +471,8 @@ void disp()
 	else if (DispStat == AppStat::ABOUT_PAGE)
 	{
 
-
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 		glLoadIdentity();
 
 		SetFont(GLUT_BITMAP_HELVETICA_18);
@@ -436,11 +491,11 @@ int main(int argc, char** argv)
 	glutInit(&argc, argv);//initialising glut
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
 	glutInitWindowPosition(10, 10);//initial position in pixels This is optional and not specifying it will mean window is at random location.
-	glutInitWindowSize(1000, 1000);//size of the window
+	glutInitWindowSize(1000,1000);//size of the window
 	glutCreateWindow("TESTING WINDOW");
 	glutDisplayFunc(disp);
 	glutReshapeFunc(reshape);
-
+	
 	DispStat = AppStat::START_SCREEN;
 
 
@@ -473,14 +528,16 @@ double TimeOfFlight(float velo, float ang)
 
 void ResetValues()
 {
+	//modify to display full value set later on, maybe pass an enum and evaluate or use PolyMorphism.
 	values[0] = 0;
 	values[1] = 0;
 	values[2] = 0;
 	inp[0] = "";
 	inp[1] = "";
 	inp[2] = "";
-	xProj = 0.0;
+	xProj = -87.7;//decent start? It looks right here.
 	yProj = 0.0;
+	TimeInAir = 0.0;
 }
 
 void plotTrajectory()
@@ -488,13 +545,13 @@ void plotTrajectory()
 	double i = 0;
 
 	//double xProj, yProj;
-	for (i = 0, xProj = 0, yProj = 0; i < ToF; i += 0.0166667)
+	for ( i = 0, xProj = 0, yProj = 0; i < ToF; i+= 0.0166667)
 	{
 		glPointSize(3);
-		xProj = uCosTh * i;
-		yProj = uSinTh * i - 4.9 * i * i;
+		 xProj = uCosTh * i - 87.7;
+		 yProj = uSinTh * i - 4.9 * i * i;
 		glBegin(GL_POINTS);
-
+		
 		//TimeInAir += 0.016666667;
 		glVertex2d(xProj, yProj);
 		glEnd();
@@ -502,5 +559,21 @@ void plotTrajectory()
 	}
 
 	std::cout << "i after flush = " << i << std::endl;
-	std::cout << "Range covered = " << xProj << std::endl;
+	std::cout << "Range covered = " << (xProj+87.7) << std::endl;
+}
+
+void DrawGrid()
+{
+	glBegin(GL_LINES);
+		glColor3f(1, 0, 0);
+		//X-Axis (ground)
+		glVertex2f(-90, -2.6);//screen left
+		glVertex2f(90, -2.6);//screen right
+
+		//Y-Axis
+		glVertex2f(-90, -2.6);//screen bottom
+		glVertex2f(-90, 100);//screen top
+
+	glEnd();
+
 }
