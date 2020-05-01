@@ -492,7 +492,7 @@ int main(int argc, char** argv)
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
 	glutInitWindowPosition(10, 10);//initial position in pixels This is optional and not specifying it will mean window is at random location.
 	glutInitWindowSize(1000,1000);//size of the window
-	glutCreateWindow("TESTING WINDOW");
+	glutCreateWindow("Master Window");
 	glutDisplayFunc(disp);
 	glutReshapeFunc(reshape);
 	
