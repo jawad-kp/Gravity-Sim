@@ -198,7 +198,11 @@ void KeyProc(unsigned char key, int x, int y)//This is function bound to the key
 		{
 			ResetValues();
 			if (DispStat == AppStat::PRJMTN_DISP)
+			{
 				DispStat = AppStat::PRJMTN_PLOT;
+				ResetValues();
+				glutPostRedisplay();
+			}
 			else if (DispStat == AppStat::DROP_DISP)
 				DispStat = AppStat::DROP_PLOT;
 			//move to next page for final values, if not leave it here idk TBD That's why else if and not just an else
@@ -206,7 +210,7 @@ void KeyProc(unsigned char key, int x, int y)//This is function bound to the key
 	}
 }
 
-void plotTrajectory();
+void plotTrajectory(int);
 
 void animater(int a)
 {
@@ -426,8 +430,8 @@ void disp()
 		gluOrtho2D(-100, 100, -100, 100);
 		//I am changing the projection to 100 total span. we can make it bigger but This looks fine so far.
 		glMatrixMode(GL_MODELVIEW);
-		plotTrajectory();// --> Shows you the expected trajectory
-
+		//plotTrajectory();// --> Shows you the expected trajectory
+		glutTimerFunc(1000 / 60, plotTrajectory, 0);
 		DrawGrid();
 		glColor3f(0, 1, 1);
 
@@ -569,12 +573,12 @@ void ResetValues()
 	TimeInAir = 0.0;
 }
 
-void plotTrajectory()
+void plotTrajectory(int)
 {
 	double i = 0;
 
 	//double xProj, yProj;
-	for ( i = 0, xProj = 0, yProj = 0; i < ToF; i+= 0.0166667)
+	for ( i = 0, xProj = 0, yProj = 0; i <= TimeInAir; i+= 0.0166667)
 	{
 		glPointSize(3);
 		 xProj = uCosTh * i - 87.7;
@@ -584,11 +588,14 @@ void plotTrajectory()
 		//TimeInAir += 0.016666667;
 		glVertex2d(xProj, yProj);
 		glEnd();
-		glFlush();
+		//glFlush();
 	}
+	TimeInAir += 0.016666667;
 
-	std::cout << "i after flush = " << i << std::endl;
-	std::cout << "Range covered = " << (xProj+87.7) << std::endl;
+	glutPostRedisplay();
+
+	/*std::cout << "i after flush = " << i << std::endl;
+	std::cout << "Range covered = " << (xProj+87.7) << std::endl;*/
 }
 
 void DrawGrid()
