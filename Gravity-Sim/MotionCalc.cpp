@@ -375,6 +375,36 @@ void disp()
 		DrawGrid();
 		glColor3f(0, 1, 1);
 		glutTimerFunc(1000/60, animater, pauseState);
+
+		//Displaying Movement Options
+		DrawString(-90, -20, 0, "P -> Play/Pause");
+		DrawString(-90, -25, 0, "R -> Restart");
+		DrawString(-90, -30, 0, "S -> Plot Trajectory");
+
+		//Displaying Current Values
+		DrawString(40, -20, 0, "Height: ");
+		char bufHt[20];
+		double ht;
+		if (yProj <= 0.13)
+			ht = 0.0;
+		else
+			ht = yProj;
+		//It fixes the height issue where it's slightly higher on the bottom because of the last frame that gets skipped or something, I am not sure. It looks better this way.
+		snprintf(bufHt, sizeof(bufHt), "%f", ht); //converts a float into a character array so we can display it
+		DrawString(60, -20, 0, bufHt);
+
+		char bufDis[20];
+		snprintf(bufDis, sizeof(bufDis), "%f", (xProj + 87.7)); 
+		DrawString(40, -25, 0, "Distance: ");
+		DrawString(70, -25, 0, bufDis);
+
+		char bufTime[20];
+		snprintf(bufTime, sizeof(bufTime), "%f", TimeInAir);
+		DrawString(40, -30, 0, "Time in Air: ");
+		DrawString(70, -30, 0, bufTime);
+
+
+
 		glTranslated(xProj, yProj, 0);
 		//glTranslated(-95, 0, 0);//Right now it is at the leftmost part of the screen. Yet to be seen if I can travel 200m using it.
 		glutSolidSphere(2.5, 100, 100);//Start form 0 and travels exactly to the grid at the moment. Math is correct we need to figure out how to modify mapping and then this will be done.
@@ -396,8 +426,7 @@ void disp()
 		gluOrtho2D(-100, 100, -100, 100);
 		//I am changing the projection to 100 total span. we can make it bigger but This looks fine so far.
 		glMatrixMode(GL_MODELVIEW);
-		//we basically move our camera by the distance specified here.
-		plotTrajectory();// --> Shows you the expected trajectory uncomment to verify that.
+		plotTrajectory();// --> Shows you the expected trajectory
 
 		DrawGrid();
 		glColor3f(0, 1, 1);
