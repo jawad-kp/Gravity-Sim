@@ -419,21 +419,33 @@ void disp()
 
 	else if (DispStat == AppStat::PRJMTN_PLOT)
 	{
-		//should we animate trajectory? TBD
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glLoadIdentity();
 
 		glMatrixMode(GL_PROJECTION);
-		//call animater once every 1000/60th of a milli second. (60fps is the refresh atm)
 		glLoadIdentity();
 		gluOrtho2D(-100, 100, -100, 100);
-		//I am changing the projection to 100 total span. we can make it bigger but This looks fine so far.
 		glMatrixMode(GL_MODELVIEW);
-		//plotTrajectory();// --> Shows you the expected trajectory
-		glutTimerFunc(1000 / 60, plotTrajectory, 0);
+		glutTimerFunc(1000 / 60, plotTrajectory, 0);//should be flusing all the points continuously but I will find a different Implemenation for this
+		double i = 0;
+
+		//double xProj, yProj;
+		for (i = 0, xProj = 0, yProj = 0; i <= TimeInAir; i += 0.0166667)
+		{
+			glPointSize(3);
+			xProj = uCosTh * i - 87.7;
+			yProj = uSinTh * i - 4.9 * i * i;
+			glBegin(GL_POINTS);
+
+			//TimeInAir += 0.016666667;
+			glVertex2d(xProj, yProj);
+			glEnd();
+			//glFlush();
+		}
+
 		DrawGrid();
-		glColor3f(0, 1, 1);
+		glColor3f(0, 1, 1);//resets colour after you draw the grid
 
 	}
 
@@ -575,22 +587,8 @@ void ResetValues()
 
 void plotTrajectory(int)
 {
-	double i = 0;
-
-	//double xProj, yProj;
-	for ( i = 0, xProj = 0, yProj = 0; i <= TimeInAir; i+= 0.0166667)
-	{
-		glPointSize(3);
-		 xProj = uCosTh * i - 87.7;
-		 yProj = uSinTh * i - 4.9 * i * i;
-		glBegin(GL_POINTS);
-		
-		//TimeInAir += 0.016666667;
-		glVertex2d(xProj, yProj);
-		glEnd();
-		//glFlush();
-	}
-	TimeInAir += 0.016666667;
+	if(TimeInAir < ToF)
+		TimeInAir += 2*0.016666667;
 
 	glutPostRedisplay();
 
