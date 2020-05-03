@@ -95,6 +95,8 @@ enum  class PlayModes {
 
 PlayModes PlayState = PlayModes::Play;
 
+double speed = 1; //Controls speed of Projectile
+
 void KeyProc(unsigned char key, int x, int y)//This is function bound to the keystroke from my keyboard
 {
 
@@ -187,6 +189,16 @@ void KeyProc(unsigned char key, int x, int y)//This is function bound to the key
 			PlayState = PlayState == PlayModes::Pause ? PlayModes::Play : PlayModes::Pause; //if the PlayState is Play then Pause otherwise Play. I've typed play so much it feels weird noe
 			glutPostRedisplay();
 		}
+		else if (key == '+')
+		{
+			speed = 2.0;
+			glutPostRedisplay();
+		}
+		else if(key == '-')
+		{
+			speed = 1.0;
+			glutPostRedisplay();
+		}
 		else if (key == 'r' || key == 'R')
 		{
 			ResetValues();
@@ -206,6 +218,7 @@ void KeyProc(unsigned char key, int x, int y)//This is function bound to the key
 				DispStat = AppStat::DROP_PLOT;
 			//move to next page for final values, if not leave it here idk TBD That's why else if and not just an else
 		}
+
 	}
 }
 
@@ -231,10 +244,6 @@ void animater(int a)
 			std::cout << DropTime;
 
 			DropPos += DisInM;//remove distance travelled 
-
-
-
-
 		}
 	}
 	else if (DispStat == AppStat::PRJMTN_DISP)
@@ -250,7 +259,7 @@ void animater(int a)
 			*/
 			xProj = (uCosTh * TimeInAir) - 87.7;//87.7 is leftmost co-ordinate
 			yProj = uSinTh * TimeInAir - 4.9 * TimeInAir * TimeInAir;
-			TimeInAir += 0.016666667;
+			TimeInAir += 0.016666667 * speed; //multiplied by how fast you want the sphere to move here.
 		}
 		else
 		{
@@ -263,8 +272,7 @@ void animater(int a)
 
 void disp()
 {
-	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);			// White Background
-	glClearDepth(1.0f);
+	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 	glEnable(GL_DEPTH_TEST);
 
 
@@ -371,14 +379,10 @@ void disp()
 		glLoadIdentity();
 
 		glMatrixMode(GL_PROJECTION);
-		//call animater once every 1000/60th of a milli second. (60fps is the refresh atm)
 		glLoadIdentity();
 		gluOrtho2D(-100, 100, -100, 100);
-		//I am changing the projection to 100 total span. we can make it bigger but This looks fine so far.
+		//I am changing the projection to 200 total span. we can make it bigger but This looks fine so far.
 		glMatrixMode(GL_MODELVIEW);
-		//we basically move our camera by the distance specified here.
-		//plotTrajectory(); --> Shows you the expected trajectory uncomment to verify that.
-
 		DrawGrid();
 		glColor3f(0, 1, 1);
 		glutTimerFunc(1000/60, animater, int(PlayState));
@@ -387,6 +391,9 @@ void disp()
 		DrawString(-90, -20, 0, "P -> Play/Pause");
 		DrawString(-90, -25, 0, "R -> Restart");
 		DrawString(-90, -30, 0, "S -> Plot Trajectory");
+		DrawString(-90, -35, 0, "Q -> Quit");
+		DrawString(-90, -40, 0, "+ -> Increase Speed");
+		DrawString(-90, -45, 0, "- -> Decrease/Normalise Speed");
 
 		//Displaying Current Values
 		DrawString(40, -20, 0, "Height: ");
@@ -397,11 +404,12 @@ void disp()
 		else
 			ht = yProj;
 		//It fixes the height issue where it's slightly higher on the bottom because of the last frame that gets skipped or something, I am not sure. It looks better this way.
+
 		snprintf(bufHt, sizeof(bufHt), "%f", ht); //converts a float into a character array so we can display it
 		DrawString(60, -20, 0, bufHt);
 
 		char bufDis[20];
-		snprintf(bufDis, sizeof(bufDis), "%f", (xProj + 87.7)); 
+		snprintf(bufDis, sizeof(bufDis), "%f", (xProj + 87.7)); //adding because the projectile is in the third quadrat
 		DrawString(40, -25, 0, "Distance: ");
 		DrawString(70, -25, 0, bufDis);
 
@@ -413,7 +421,6 @@ void disp()
 
 
 		glTranslated(xProj, yProj, 0);
-		//glTranslated(-95, 0, 0);//Right now it is at the leftmost part of the screen. Yet to be seen if I can travel 200m using it.
 		glutSolidSphere(2.5, 100, 100);//Start form 0 and travels exactly to the grid at the moment. Math is correct we need to figure out how to modify mapping and then this will be done.
 
 
@@ -430,7 +437,7 @@ void disp()
 		glLoadIdentity();
 		gluOrtho2D(-100, 100, -100, 100);
 		glMatrixMode(GL_MODELVIEW);
-		glutTimerFunc(1000 / 60, plotTrajectory, 0);//should be flusing all the points continuously but I will find a different Implemenation for this
+		glutTimerFunc(1000 / 60, plotTrajectory, 0);//Can't flush from the function, so it instead updates values and we display them here.
 		double i = 0;
 
 		//double xProj, yProj;
@@ -587,6 +594,7 @@ void ResetValues()
 	yProj = 0.0;
 	TimeInAir = 0.0;
 	PlayState = PlayModes::Play;
+	speed = 1.0;
 }
 
 void plotTrajectory(int)
