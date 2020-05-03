@@ -17,12 +17,6 @@ Equations of Motion to implement:
 
 	y = u*t*sin(theta) - 0.5*(g*t*t)
 
-	TODO:
-
-	Use That time in air and calculate x and y at each point in time //sorta done
-
-	Map that location to sphere's co-ordinates and move that shit.//some small oofs associated with this.
-
 */
 
 void* Currentfont; //saves the font as a void pointer
@@ -94,7 +88,12 @@ double uSinTh = 0.0, uCosTh = 0.0, TimeInAir = 0.0;//u*sin(theta) and u*cos(th) 
 double xProj, yProj;
 double TimeOfFlight(float, float);
 void DrawGrid();
-int pauseState = 0; //0 is play 1 is pause
+
+enum  class PlayModes {
+	Play = 0, Pause = 1 , Fin = 2
+};
+
+PlayModes PlayState = PlayModes::Play;
 
 void KeyProc(unsigned char key, int x, int y)//This is function bound to the keystroke from my keyboard
 {
@@ -183,9 +182,9 @@ void KeyProc(unsigned char key, int x, int y)//This is function bound to the key
 	}
 	else if (DispStat == AppStat::PRJMTN_DISP || DispStat == AppStat::DROP_DISP)
 	{
-		if (key == 'p' || key == 'P' || key == ' ')
+		if ((key == 'p' || key == 'P' || key == ' ' ) && PlayState != PlayModes::Fin)
 		{
-			pauseState = pauseState == 0 ? 1 : 0;
+			PlayState = PlayState == PlayModes::Pause ? PlayModes::Play : PlayModes::Pause; //if the PlayState is Play then Pause otherwise Play. I've typed play so much it feels weird noe
 			glutPostRedisplay();
 		}
 		else if (key == 'r' || key == 'R')
@@ -252,6 +251,10 @@ void animater(int a)
 			xProj = (uCosTh * TimeInAir) - 87.7;//87.7 is leftmost co-ordinate
 			yProj = uSinTh * TimeInAir - 4.9 * TimeInAir * TimeInAir;
 			TimeInAir += 0.016666667;
+		}
+		else
+		{
+			PlayState = PlayModes::Fin;
 		}
 	}
 	glutPostRedisplay();
@@ -378,7 +381,7 @@ void disp()
 
 		DrawGrid();
 		glColor3f(0, 1, 1);
-		glutTimerFunc(1000/60, animater, pauseState);
+		glutTimerFunc(1000/60, animater, int(PlayState));
 
 		//Displaying Movement Options
 		DrawString(-90, -20, 0, "P -> Play/Pause");
@@ -389,7 +392,7 @@ void disp()
 		DrawString(40, -20, 0, "Height: ");
 		char bufHt[20];
 		double ht;
-		if (yProj <= 0.13)
+		if (PlayState == PlayModes::Fin)
 			ht = 0.0;
 		else
 			ht = yProj;
@@ -492,7 +495,7 @@ void disp()
 		glLoadIdentity();
 
 		glMatrixMode(GL_PROJECTION);
-		glutTimerFunc(1000 / 60, animater, pauseState);//call animater once every 1000/60th of a milli second. (60fps is the refresh atm)
+		glutTimerFunc(1000 / 60, animater, int(PlayState));//call animater once every 1000/60th of a milli second. (60fps is the refresh atm)
 		glLoadIdentity();
 		gluOrtho2D(-50, 50, -50, 50);
 		//I am changing the projection to 100 total span. we can make it bigger but This looks fine so far.
@@ -583,6 +586,7 @@ void ResetValues()
 	xProj = -87.7;//decent start? It looks right here.
 	yProj = 0.0;
 	TimeInAir = 0.0;
+	PlayState = PlayModes::Play;
 }
 
 void plotTrajectory(int)
