@@ -361,7 +361,7 @@ void disp()
 
 			values[1] = (4.0 * std::atan2(1.0, 1.0)) * values[1] / 180.0;//deg2Radians
 			ToF = TimeOfFlight(values[0], values[1]);
-			std::cout << "The Time of Flight is:\n";
+			/*std::cout << "The Time of Flight is:\n";*/
 
 			std::cout << ToF << std::endl;
 			uSinTh = values[0] * sin(values[1]);
@@ -438,12 +438,10 @@ void disp()
 		gluOrtho2D(-100, 100, -100, 100);
 		glMatrixMode(GL_MODELVIEW);
 		glutTimerFunc(1000 / 60, plotTrajectory, 0);//Can't flush from the function, so it instead updates values and we display them here.
-		double i = 0;
-
 		//double xProj, yProj;
-		for (i = 0, xProj = 0, yProj = 0; i <= TimeInAir; i += 0.0166667)
+		for (double i = 0, xProj = 0, yProj = 0; i <= TimeInAir; i += 0.0166667)
 		{
-			glPointSize(3);
+			glPointSize(2);
 			xProj = uCosTh * i - 87.7;
 			yProj = uSinTh * i - 4.9 * i * i;
 			glBegin(GL_POINTS);
@@ -520,14 +518,11 @@ void disp()
 		glFlush();
 	}
 
-
-
-
 	else if (DispStat == AppStat::ABOUT_PAGE)
 	{
 
 		
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glLoadIdentity();
 
 		SetFont(GLUT_BITMAP_HELVETICA_18);
@@ -537,7 +532,6 @@ void disp()
 	}
 	glutSwapBuffers();
 
-
 }
 
 
@@ -545,8 +539,10 @@ int main(int argc, char** argv)
 {
 	glutInit(&argc, argv);//initialising glut
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
+
 	glutInitWindowPosition(10, 10);//initial position in pixels This is optional and not specifying it will mean window is at random location.
 	glutInitWindowSize(1000,1000);//size of the window
+
 	glutCreateWindow("TESTING WINDOW");
 	glutDisplayFunc(disp);
 	glutReshapeFunc(reshape);
@@ -555,7 +551,6 @@ int main(int argc, char** argv)
 
 
 	glutKeyboardFunc(KeyProc);
-
 
 	glutMainLoop();
 	return 0;
@@ -572,13 +567,9 @@ double DropTCalc(float dis)
 
 double TimeOfFlight(float velo, float ang)
 {
-	/*
-		t = (2*u*sin(theta))/g
-	*/
+	//	t = (2*u*sin(theta))/g
 	double t = 2 * velo * sin(ang) / 9.8;
 	return t;
-
-
 }
 
 void ResetValues()
@@ -603,9 +594,6 @@ void plotTrajectory(int)
 		TimeInAir += 2*0.016666667;
 
 	glutPostRedisplay();
-
-	/*std::cout << "i after flush = " << i << std::endl;
-	std::cout << "Range covered = " << (xProj+87.7) << std::endl;*/
 }
 
 void DrawGrid()
@@ -622,11 +610,7 @@ void DrawGrid()
 
 		//Markings on X-Axis
 		glColor3f(0, 1, 0);
-		/*glVertex2f(-91, 7.4);
-		glVertex2f(-89, 7.4);*/
 		glEnd();
-		/*glVertex2f(-80, -3.6);
-		glVertex2f(-80, -1.6);*/ // This has the right length so far
 		for (float Xmark = -80, Ymark = 7.4; Xmark < 90; Xmark += 10, Ymark += 10)
 		{
 			glBegin(GL_LINES);
@@ -640,7 +624,5 @@ void DrawGrid()
 			glEnd();
 
 		}
-
-	
 
 }
