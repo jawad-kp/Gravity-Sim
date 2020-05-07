@@ -620,6 +620,27 @@ void DrawGrid()
 		glVertex2f(-90, -2.6);//screen bottom
 		glVertex2f(-90, 100);//screen top
 
-	glEnd();
+		//Markings on X-Axis
+		glColor3f(0, 1, 0);
+		/*glVertex2f(-91, 7.4);
+		glVertex2f(-89, 7.4);*/
+		glEnd();
+		/*glVertex2f(-80, -3.6);
+		glVertex2f(-80, -1.6);*/ // This has the right length so far
+		for (float Xmark = -80, Ymark = 7.4; Xmark < 90; Xmark += 10, Ymark += 10)
+		{
+			glBegin(GL_LINES);
+				//X-axis Marking
+				glVertex2f(Xmark, -3.6);//bottom
+				glVertex2f(Xmark, -1.6);//top
+
+				// Y-Axis Marking
+				glVertex2f(-91, Ymark);//left
+				glVertex2f(-89, Ymark);//right
+			glEnd();
+
+		}
+
+	
 
 }
