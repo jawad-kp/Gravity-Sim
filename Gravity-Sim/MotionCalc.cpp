@@ -80,11 +80,12 @@ AppStat DispStat = AppStat::UNKNOWN;
 float values[3];//the values we need are stored in this array as floats
 
 std::string inp[3];//we save the strings we want to flush in this. They're small numbers so this should work fine for our purposes. Saving it here allows us to implement backspace easily and error hnadling later on is also easier
-double DropPos = 8.0, DropTime = 0.0;
+double DropPos = 0.0, DropTime = 0.0, DisToMove = 0.0, InitDrop = 0.0;
 double TotalDropTime = 0.0;
 double DropTCalc(float);
 double ToF = 0.0;
 double uSinTh = 0.0, uCosTh = 0.0, TimeInAir = 0.0;//u*sin(theta) and u*cos(th) precalculated to optimise for speed.
+bool st = false;//incase it's vertically thrown, this helps keep distance at 0
 double xProj, yProj;
 double TimeOfFlight(float, float);
 void DrawGrid();
@@ -227,23 +228,29 @@ void plotTrajectory(int);
 void animater(int a)
 {
 	
-	if (a == 1)
+	if (a == (int)PlayModes::Fin || a == (int) PlayModes::Pause)
 	{
 		glutPostRedisplay();
 		return;
 	}
 	if (DispStat == AppStat::DROP_DISP)
 	{
-		if (DropTime < TotalDropTime && DropPos > -47.5)
+		if (DropTime <= TotalDropTime)
 		{
-			DropTime = DropTime + 0.016667;//this wasn't taking 1/60 for some reason and I hard-coded and made the rest doubles for it to work
-			double DisInM = -4.9 * (DropTime * DropTime); // s = 0.5gt^2 => 0.5g = 4.9 (negative because we goin down.)
-			std::cout << "\nSphere should've moved by:\n";
-			std::cout << DisInM;
-			std::cout << "\nTime Elapsed = \n";
+			/* h = ut + 0.5gt^2 , Since we're dropping it u = 0 we're left with 0.5gt^2 */
+			
+			DisToMove = -4.9 * DropTime * DropTime;
+			DropPos = InitDrop + DisToMove;
+			DropTime += 0.016666667;
+		}
+		else
+		{
+			PlayState = PlayModes::Fin;
+			std::cout<<"\n Time spent in air = \n ";
 			std::cout << DropTime;
-
-			DropPos += DisInM;//remove distance travelled 
+			std::cout << "\n Speed =  \n ";
+			std::cout << speed;
+			
 		}
 	}
 	else if (DispStat == AppStat::PRJMTN_DISP)
@@ -359,11 +366,15 @@ void disp()
 			DispStat = AppStat::PRJMTN_DISP;
 
 
+			if (values[1] == 90)
+			{
+				st = true;
+			}
 			values[1] = (4.0 * std::atan2(1.0, 1.0)) * values[1] / 180.0;//deg2Radians
 			ToF = TimeOfFlight(values[0], values[1]);
 			/*std::cout << "The Time of Flight is:\n";*/
 
-			std::cout << ToF << std::endl;
+			std::cout << values[1] << std::endl;
 			uSinTh = values[0] * sin(values[1]);
 			uCosTh = values[0] * cos(values[1]); //Saving u*sin(theta) and u*cos(theta) so we won't waste compute time with calls
 
@@ -409,9 +420,21 @@ void disp()
 		DrawString(60, -20, 0, bufHt);
 
 		char bufDis[20];
-		snprintf(bufDis, sizeof(bufDis), "%f", (xProj + 87.7)); //adding because the projectile is in the third quadrat
 		DrawString(40, -25, 0, "Distance: ");
-		DrawString(70, -25, 0, bufDis);
+		if (st)
+		{
+			//snprintf(bufDis, sizeof(bufDis), "%f", 0.0000);
+			DrawString(70, -25, 0, "0.0000000");
+		}
+			
+		else
+		{
+			snprintf(bufDis, sizeof(bufDis), "%f", (xProj + 87.7)); //adding because the projectile is in the third quadrat
+			DrawString(70, -25, 0, bufDis);
+		}
+
+		
+		
 
 		char bufTime[20];
 		snprintf(bufTime, sizeof(bufTime), "%f", TimeInAir);
@@ -477,16 +500,16 @@ void disp()
 		{
 			DispStat = AppStat::DROP_DISP;
 			//Debug stuff is here
-			/*std::cout << "\nThe value for height entered is:\n";
-			std::cout << values[2];*/
-
-			glMatrixMode(GL_PROJECTION);
-			glLoadIdentity();
-			gluOrtho2D(-50, 50, -50, 50);//
-			glMatrixMode(GL_MODELVIEW);
-			DropPos = values[2] - 50 - 2.5;//Initialising where you drop or drop height.
+			std::cout << "\nThe value for height entered is:\n";
+			std::cout << values[2];
+			DropPos = values[2];//Initialising where you drop or drop height.
+			InitDrop = values[2];
 			//glutTimerFunc(0, animater, 0);
 			TotalDropTime = DropTCalc(values[2]);
+			//DropTime = TotalDropTime;
+			DropTime = 0;
+			std::cout << "\nDrop Time is:\n";
+			std::cout << TotalDropTime;
 			glutPostRedisplay();
 
 		}
@@ -502,14 +525,12 @@ void disp()
 		glMatrixMode(GL_PROJECTION);
 		glutTimerFunc(1000 / 60, animater, int(PlayState));//call animater once every 1000/60th of a milli second. (60fps is the refresh atm)
 		glLoadIdentity();
-		gluOrtho2D(-50, 50, -50, 50);
+		gluOrtho2D(-100, 100, -100, 100);
 		//I am changing the projection to 100 total span. we can make it bigger but This looks fine so far.
 		glMatrixMode(GL_MODELVIEW);
-		glTranslatef(15, DropPos, 0);//we basically move our camera by the distance specified here.
-
-		/*We need to do this because we can only draw a sphere at the origin. So, I change where the origin is,
-		instead of moving object. 60 looks smooth and because we have a black~ish background, no dropped frames
-		that I can make out. */
+		DrawGrid();
+		glColor3f(0, 1, 1);
+		glTranslatef(15, DropPos, 0);//we basically move our camera by the distance specified here
 
 
 
