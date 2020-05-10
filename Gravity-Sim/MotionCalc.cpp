@@ -399,7 +399,7 @@ void disp()
 		glutTimerFunc(1000/60, animater, int(PlayState));
 
 		//Displaying Movement Options
-		DrawString(-90, -20, 0, "P -> Play/Pause");
+		DrawString(-90, -20, 0, "P  or Space -> Play/Pause");
 		DrawString(-90, -25, 0, "R -> Restart");
 		DrawString(-90, -30, 0, "S -> Plot Trajectory");
 		DrawString(-90, -35, 0, "Q -> Quit");
@@ -526,11 +526,38 @@ void disp()
 		glutTimerFunc(1000 / 60, animater, int(PlayState));//call animater once every 1000/60th of a milli second. (60fps is the refresh atm)
 		glLoadIdentity();
 		gluOrtho2D(-100, 100, -100, 100);
-		//I am changing the projection to 100 total span. we can make it bigger but This looks fine so far.
+
 		glMatrixMode(GL_MODELVIEW);
 		DrawGrid();
 		glColor3f(0, 1, 1);
+		//Displaying Movement Options
+		DrawString(-90, -20, 0, "P or Space -> Play/Pause");
+		DrawString(-90, -25, 0, "R -> Restart");
+		//DrawString(-90, -30, 0, "S -> Plot Trajectory");
+		DrawString(-90, -30, 0, "Q -> Quit");
+		DrawString(-90, -35, 0, "+ -> Increase Speed");
+		DrawString(-90, -40, 0, "- -> Decrease/Normalise Speed");
+
+
+		//Displaying Current Values
+		DrawString(40, -20, 0, "Height: ");
+		char bufHt[20];
+		double ht;
+		if (PlayState == PlayModes::Fin)
+			ht = 0.0;
+		else
+			ht = DropPos;
+		snprintf(bufHt, sizeof(bufHt), "%f", ht); //converts a float into a character array so we can display it
+		DrawString(60, -20, 0, bufHt);
+
+		DrawString(40, -30, 0, "Time: ");
+		char bufTime[20];
+		snprintf(bufTime, sizeof(bufTime), "%f", DropTime);
+		DrawString(60, -30, 0, bufTime);
+		
 		glTranslatef(15, DropPos, 0);//we basically move our camera by the distance specified here
+
+
 
 
 
@@ -605,8 +632,10 @@ void ResetValues()
 	xProj = -87.7;//decent start? It looks right here.
 	yProj = 0.0;
 	TimeInAir = 0.0;
+	DropTime = 0;
 	PlayState = PlayModes::Play;
 	speed = 1.0;
+
 }
 
 void plotTrajectory(int)
