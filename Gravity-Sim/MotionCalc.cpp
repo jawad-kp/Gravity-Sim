@@ -391,7 +391,8 @@ void disp()
 
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
-		gluOrtho2D(-100, 100, -100, 100);
+		//gluOrtho2D(-100, 100, -100, 100);
+		glOrtho(-100, 100, -100, 100, -100, 100);
 		//I am changing the projection to 200 total span. we can make it bigger but This looks fine so far.
 		glMatrixMode(GL_MODELVIEW);
 		DrawGrid();
@@ -458,7 +459,7 @@ void disp()
 
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
-		gluOrtho2D(-100, 100, -100, 100);
+		glOrtho(-100, 100, -100, 100, -100, 100);
 		glMatrixMode(GL_MODELVIEW);
 		glutTimerFunc(1000 / 60, plotTrajectory, 0);//Can't flush from the function, so it instead updates values and we display them here.
 		//double xProj, yProj;
@@ -525,7 +526,7 @@ void disp()
 		glMatrixMode(GL_PROJECTION);
 		glutTimerFunc(1000 / 60, animater, int(PlayState));//call animater once every 1000/60th of a milli second. (60fps is the refresh atm)
 		glLoadIdentity();
-		gluOrtho2D(-100, 100, -100, 100);
+		glOrtho(-100, 100, -100, 100, -100, 100);
 
 		glMatrixMode(GL_MODELVIEW);
 		DrawGrid();
