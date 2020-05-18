@@ -632,7 +632,7 @@ int main(int argc, char** argv)
 	glutInitWindowPosition(10, 10);//initial position in pixels This is optional and not specifying it will mean window is at random location.
 	glutInitWindowSize(1000,1000);//size of the window
 
-	glutCreateWindow("TESTING WINDOW");
+	glutCreateWindow("MAIN WINDOW");
 	glutDisplayFunc(disp);
 	glutReshapeFunc(reshape);
 	
