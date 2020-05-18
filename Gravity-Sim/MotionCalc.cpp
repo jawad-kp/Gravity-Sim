@@ -21,7 +21,7 @@ Equations of Motion to implement:
 
 void* Currentfont; //saves the font as a void pointer
 
-void ResetValues();
+void ResetValues();//our reset function to update and modify our values for continual use.
 
 
 void SetFont(void* font)
@@ -569,14 +569,54 @@ void disp()
 
 	else if (DispStat == AppStat::ABOUT_PAGE)
 	{
-
 		
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glLoadIdentity();
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		glOrtho(-100, 100, -100, 100, -100, 100);
+		glMatrixMode(GL_MODELVIEW);
+
+		SetFont(GLUT_BITMAP_TIMES_ROMAN_24);
+		glColor3f(0, 0, 0);
+		DrawString(-20, 80, 0, "About This Project:");
 
 		SetFont(GLUT_BITMAP_HELVETICA_18);
-		glColor3f(0.0, 0.0, 0.0);
-		DrawString(-0.3, 0.8, 0.0, "About:");
+
+		/* Projectile Part */
+		glColor3f(0,0,0);
+		DrawString(-70, 50, 0, "Projectile:");
+		
+		//SetFont(GLUT_BITMAP_HELVETICA_12);
+		DrawString(-45, 50, 0, "This is a simulation of an object's motion in two dimensions which is under constant acceleration");
+		DrawString(- 67, 45,0, "due to gravity. Our project presents an approach at mimicking how a sphere thrown from a certain height");
+		DrawString(-67, 40,0,"would travel through space.");
+
+
+		DrawString(-67, 30, 0, "The simulation achieves accuracy in capturing the trajectory of motion of the projectile using");
+		DrawString(-67,25,0,"trigonometry and calculus. It also shows us the maximum distance and height the object thrown can");
+		DrawString(-67,20,0,"achieve given an initial velocity and launch angle.");
+
+
+		DrawString(-67,10,0, "Since most games and war simulations involve the propelling of an object to achieve a certain");
+		DrawString(-67,5,0,"distance accurately, our simulation has its share of applications.");
+
+		/*Drop Part*/
+		glColor3f(0, 0.0, 0);
+		DrawString(-70,-15,0, "Drop:");
+
+		DrawString(-53.25, -15, 0, "How would an object dropped from a certain height fall? How much time would it take to reach the");
+		DrawString(-67,-20,0,"ground? How high would it bounce back up? The drop simulation takes a crack at answering these");
+		DrawString(-67,-25,0,"questions by replicating real-world conditions for an object being dropped.");
+
+		SetFont(GLUT_BITMAP_HELVETICA_12);
+		glColor3f(0, 0, 0);
+		DrawString(60, -50,0, "-");
+		glColor3f(0, 0, 0);
+		DrawString(63, -50.33, 0, "A Project by Gaurav and Jawad");
+		
+
+
 		glFlush();
 	}
 	glutSwapBuffers();
