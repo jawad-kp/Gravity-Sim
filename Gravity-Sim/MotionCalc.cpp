@@ -56,7 +56,7 @@ void reshape(int width, int height)
 enum class AppStat
 {
 	UNKNOWN = -1, START_SCREEN = 3, MENU = 4, PRJMTN_INP_INIT_VELOCITY = 0, PRJMTN_INP_THETA = 1,
-	PRJMTN_DISP = 5, PRJMTN_PLOT = 6, DROP_INP_HT = 2, DROP_DISP = 7, DROP_PLOT = 8, ABOUT_PAGE = 10
+	PRJMTN_DISP = 5, PRJMTN_PLOT = 6, DROP_INP_HT = 2, DROP_DISP = 7, ABOUT_PAGE = 10
 
 };//the input states get 0 - 2 so I can use the arrays and not duplicate code for everything here.
 
@@ -141,8 +141,8 @@ void KeyProc(unsigned char key, int x, int y)//This is function bound to the key
 		}
 		else
 		{
-			inp[(int)DispStat].push_back(key);
-			values[(int)DispStat] = std::stof(inp[(int)DispStat]);
+			inp[(int)DispStat].push_back(key);//appending value to the string here
+			values[(int)DispStat] = std::stof(inp[(int)DispStat]); //Converting string to float here
 			glutPostRedisplay();
 		}
 
@@ -216,7 +216,10 @@ void KeyProc(unsigned char key, int x, int y)//This is function bound to the key
 				glutPostRedisplay();
 			}
 			else if (DispStat == AppStat::DROP_DISP)
-				DispStat = AppStat::DROP_PLOT;
+			{
+				DispStat = AppStat::MENU;
+				glutPostRedisplay();
+			}
 			//move to next page for final values, if not leave it here idk TBD That's why else if and not just an else
 		}
 
@@ -305,6 +308,12 @@ void disp()
 		
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glLoadIdentity();
+
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		glOrtho(-1, 1, -1, 1, -1, 1);//Redrawing matrix because coming back from elsewhere messes it up otherwise
+		glMatrixMode(GL_MODELVIEW);
+		
 		ResetValues();
 
 		SetFont(GLUT_BITMAP_HELVETICA_18);
@@ -534,10 +543,10 @@ void disp()
 		//Displaying Movement Options
 		DrawString(-90, -20, 0, "P or Space -> Play/Pause");
 		DrawString(-90, -25, 0, "R -> Restart");
-		//DrawString(-90, -30, 0, "S -> Plot Trajectory");
-		DrawString(-90, -30, 0, "Q -> Quit");
-		DrawString(-90, -35, 0, "+ -> Increase Speed");
-		DrawString(-90, -40, 0, "- -> Decrease/Normalise Speed");
+		DrawString(-90, -30, 0, "S -> Main Menu");//we can add a plot or a stats page here if we wanted to
+		DrawString(-90, -35, 0, "Q -> Quit");
+		DrawString(-90, -40, 0, "+ -> Increase Speed");
+		DrawString(-90, -45, 0, "- -> Decrease/Normalise Speed");
 
 
 		//Displaying Current Values
@@ -619,6 +628,7 @@ void disp()
 
 		glFlush();
 	}
+
 	glutSwapBuffers();
 
 }
