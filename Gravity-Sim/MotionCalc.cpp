@@ -353,6 +353,7 @@ void disp()
 		}
 		glFlush();
 	}
+
 	else if (DispStat == AppStat::PRJMTN_INP_THETA)
 	{
 		
