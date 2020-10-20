@@ -5,6 +5,7 @@
 #include<iostream>
 #include<string>
 #include<math.h>
+#include<ctype.h>
 
 /*
 Equations of Motion to implement:
@@ -115,7 +116,7 @@ void KeyProc(unsigned char key, int x, int y)//This is function bound to the key
 		glMatrixMode(GL_MODELVIEW);
 		glutPostRedisplay();
 	}
-	if (TakeInput)//we process and take input here. common processing for each varaible
+	if (TakeInput)//we process and take input here. common processing for each variable
 	{
 		if (key == 13)
 		{
@@ -141,9 +142,12 @@ void KeyProc(unsigned char key, int x, int y)//This is function bound to the key
 		}
 		else
 		{
-			inp[(int)DispStat].push_back(key);
-			values[(int)DispStat] = std::stof(inp[(int)DispStat]);
-			glutPostRedisplay();
+			if(isdigit(key))
+			{
+				inp[(int)DispStat].push_back(key);
+				values[(int)DispStat] = std::stof(inp[(int)DispStat]);
+				glutPostRedisplay();
+			}
 		}
 
 	}
