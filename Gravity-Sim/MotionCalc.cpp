@@ -5,6 +5,7 @@
 #include<iostream>
 #include<string>
 #include<math.h>
+#include<ctype.h>
 
 /*
 Equations of Motion to implement:
@@ -141,7 +142,7 @@ void KeyProc(unsigned char key, int x, int y)//This is function bound to the key
 		}
 		else
 		{
-			if(key>='0'&&key<='9')
+			if(isdigit(key))
 			{
 				inp[(int)DispStat].push_back(key);
 				values[(int)DispStat] = std::stof(inp[(int)DispStat]);
