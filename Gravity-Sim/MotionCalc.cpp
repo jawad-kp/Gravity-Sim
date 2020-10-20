@@ -146,8 +146,9 @@ void KeyProc(unsigned char key, int x, int y)//This is function bound to the key
 			{
 				inp[(int)DispStat].push_back(key);
 				values[(int)DispStat] = std::stof(inp[(int)DispStat]);
-				glutPostRedisplay();
+				
 			}
+			glutPostRedisplay();
 		}
 
 	}
