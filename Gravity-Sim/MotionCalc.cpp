@@ -1,4 +1,3 @@
-
 #include<GL/glew.h>
 #include<glut/glut.h>
 #include<gl/GLU.h>//this is apparantly built in. Even glew was built in. We techically only needed to set the preprocessor thingy for it. GL is our include and gl is the built-in shit from Visual Studio.
